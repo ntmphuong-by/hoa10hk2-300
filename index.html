@@ -1,0 +1,2162 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hóa Học 10 - Thử Tài Giáng Sinh</title>
+    <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --red: #c0392b;
+            --green: #27ae60;
+            --gold: #f1c40f;
+            --white: #ffffff;
+            --bg-dark: #2c3e50;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-dark);
+            background-image: url('https://images.unsplash.com/photo-1512389142860-9c449e58a543?q=80&w=2000&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: #333;
+        }
+
+        /* --- SỬA LỖI KHÔNG BẤM ĐƯỢC NÚT --- */
+        /* Lớp phủ và tuyết sẽ không chặn chuột */
+        .overlay, #snow-container, .snowflake {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; /* QUAN TRỌNG: Cho phép click xuyên qua */
+        }
+        
+        .overlay {
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1;
+        }
+
+        /* Khung game - Tăng z-index để nổi lên trên cùng */
+        .game-card {
+            position: relative;
+            z-index: 100; /* Cao hơn tất cả các lớp khác */
+            background: rgba(255, 255, 255, 0.96);
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 0 40px rgba(255, 0, 0, 0.6);
+            border: 4px solid var(--red);
+            overflow-y: auto;
+            text-align: center;
+            pointer-events: auto; /* Đảm bảo nhận được click chuột */
+        }
+        /* ------------------------------------- */
+
+        h1 {
+            font-family: 'Mountains of Christmas', cursive;
+            color: var(--red);
+            font-size: 3rem;
+            margin: 0 0 20px 0;
+            text-shadow: 2px 2px var(--gold);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background: var(--green);
+            color: white;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .question-area { margin-bottom: 20px; }
+        
+        .q-type {
+            display: inline-block;
+            background: var(--gold);
+            color: var(--red);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .q-text {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--bg-dark);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 600px) {
+            .options-grid { grid-template-columns: 1fr; }
+            h1 { font-size: 2rem; }
+        }
+
+        .btn-option {
+            background: white;
+            border: 2px solid var(--green);
+            color: var(--green);
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: 0.2s;
+            font-family: 'Nunito', sans-serif;
+            position: relative; /* Đảm bảo nút nhận click */
+            z-index: 101;
+        }
+
+        .btn-option:hover:not([disabled]) {
+            background: var(--green);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .btn-option.correct {
+            background: var(--green) !important;
+            color: white !important;
+            border-color: var(--green);
+        }
+
+        .btn-option.wrong {
+            background: var(--red) !important;
+            color: white !important;
+            border-color: var(--red);
+        }
+
+        .input-answer {
+            width: 70%;
+            padding: 10px;
+            font-size: 1.2rem;
+            border: 2px solid var(--green);
+            border-radius: 10px;
+            outline: none;
+            margin-right: 10px;
+        }
+
+        .explanation {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f8f5;
+            border-left: 5px solid var(--green);
+            text-align: left;
+            border-radius: 5px;
+        }
+
+        .btn-control {
+            background: var(--red);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1.3rem;
+            cursor: pointer;
+            margin-top: 20px;
+            font-family: 'Mountains of Christmas', cursive;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(192, 57, 43, 0.4);
+            transition: 0.3s;
+            position: relative;
+            z-index: 102;
+        }
+
+        .btn-control:hover { 
+            background: #a93226; 
+            transform: scale(1.05);
+        }
+
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* Nút nhạc */
+        .music-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 200; /* Nổi lên trên cùng */
+            font-size: 24px;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+            pointer-events: auto;
+        }
+        
+        /* Hiệu ứng tuyết */
+        .snowflake {
+            position: fixed;
+            top: -10px;
+            color: #fff;
+            z-index: 5;
+            animation: fall linear infinite;
+        }
+        @keyframes fall { to { transform: translateY(105vh); } }
+
+    </style>
+</head>
+<body>
+
+    <div class="overlay"></div>
+    <div id="snow-container"></div>
+    
+    <div class="music-btn" onclick="toggleMusic()" title="Bật/Tắt nhạc">🔇</div>
+    <audio id="bg-music" loop>
+        <source src="https://commondatastorage.googleapis.com/codeskulptor-demos/riceracer_assets/music/win.ogg" type="audio/ogg">
+    </audio>
+
+    <div class="game-card">
+        <div id="start-screen" class="screen active">
+            <h1>🎄 Hóa Học 10<br>Giáng Sinh Vui Vẻ 🎅</h1>
+            <p style="font-size: 1.2rem; margin: 20px 0;">Ôn tập Học Kỳ 2 (Chương 4, 5, 6)<br>Kết Nối Tri Thức</p>
+            <p style="color: var(--red); font-weight: bold;">(Đã fix lỗi nút bấm!)</p>
+            <br>
+            <button class="btn-control" onclick="startGame()">Bắt Đầu Ngay 🎁</button>
+        </div>
+
+        <div id="play-screen" class="screen">
+            <div class="stats">
+                <span id="score">Điểm: 0</span>
+                <span id="progress">Câu: 1/50</span>
+            </div>
+
+            <div class="question-area">
+                <span class="q-type" id="q-type">Trắc nghiệm</span>
+                <div class="q-text" id="q-text">Đang tải câu hỏi...</div>
+                
+                <div id="options-container" class="options-grid"></div>
+                
+                <div id="input-container" style="display:none; margin-top:20px;">
+                    <input type="text" id="user-input" class="input-answer" placeholder="Nhập đáp án (ví dụ: +2, 4...)">
+                    <button class="btn-control" style="padding: 10px 20px; font-size: 1rem; font-family: 'Nunito', sans-serif;" onclick="checkShortAnswer()">Kiểm tra</button>
+                </div>
+            </div>
+
+            <div class="explanation" id="explanation">
+                <strong>Giải thích:</strong> <span id="exp-text"></span>
+            </div>
+
+            <button class="btn-control" id="next-btn" style="display:none;" onclick="nextQuestion()">Câu Tiếp Theo ➡️</button>
+        </div>
+
+        <div id="end-screen" class="screen">
+            <h1>🎉 Hoàn Thành! 🎉</h1>
+            <p style="font-size: 1.5rem;">Tổng điểm của bạn:</p>
+            <h2 style="font-size: 3rem; color: var(--green);" id="final-score">0</h2>
+            <p>Chúc bạn một mùa Giáng Sinh an lành và thi tốt!</p>
+            <button class="btn-control" onclick="location.reload()">Chơi Lại 🔄</button>
+        </div>
+    </div>
+
+<script>
+    // ================= DỮ LIỆU CÂU HỎI (50 CÂU ĐẦU TIÊN) =================
+    // Tôi đã trộn các câu hỏi từ các chương để bạn test ngay.
+    // Nếu muốn thêm đủ 300 câu, bạn chỉ cần paste thêm vào mảng này.
+    
+    const questions = [
+        // CHƯƠNG 4: OXI HÓA KHỬ
+        { type: "mc", question: "Dấu hiệu để nhận ra phản ứng oxi hóa - khử là dựa trên sự thay đổi đại lượng nào sau đây của nguyên tử?", options: ["Số mol", "Số oxi hóa", "Số khối", "Số hiệu nguyên tử"], correct: 1, explanation: "Phản ứng oxi hóa - khử là phản ứng hóa học trong đó có sự thay đổi số oxi hóa của một hay nhiều nguyên tố." },
+        { type: "mc", question: "Số oxi hóa của nguyên tử S trong ion SO₃²⁻ là bao nhiêu?", options: ["+2", "+4", "+6", "-2"], correct: 1, explanation: "Gọi x là số oxi hóa của S. Ta có: x + 3(-2) = -2 => x - 6 = -2 => x = +4." },
+        { type: "mc", question: "Chất bị oxi hóa trong phản ứng 2Na + 2H₂O → 2NaOH + H₂ là:", options: ["Na", "H₂O", "NaOH", "H₂"], correct: 0, explanation: "Na từ 0 lên +1 (nhường e) nên Na là chất khử (chất bị oxi hóa)." },
+        { type: "sa", question: "Số oxi hóa của Nitrogen trong NH₃ là bao nhiêu? (Nhập số kèm dấu, vd: -3)", correct: ["-3"], explanation: "H là +1 => x + 3(+1) = 0 => x = -3." },
+        { type: "tf", question: "Trong phản ứng oxi hóa - khử, chất khử là chất nhận electron.", correct: false, explanation: "Sai. Chất khử là chất nhường electron (số oxi hóa tăng)." },
+        { type: "mc", question: "Trong phản ứng: Fe + CuSO₄ → FeSO₄ + Cu, xảy ra quá trình gì?", options: ["Sự khử Fe²⁺", "Sự oxi hóa Cu", "Sự oxi hóa Fe", "Sự khử Cu"], correct: 2, explanation: "Fe từ 0 lên +2 nên xảy ra sự oxi hóa Fe." },
+        { type: "mc", question: "Nguyên tố Chromium (Cr) có số oxi hóa +6 trong hợp chất nào sau đây?", options: ["Cr(OH)₃", "Na₂CrO₄", "Cr₂O₃", "NaCrO₂"], correct: 1, explanation: "Trong Na₂CrO₄: 2(+1) + x + 4(-2) = 0 => x = +6." },
+        { type: "mc", question: "Chất nào sau đây chỉ có tính khử?", options: ["F₂", "S", "Na", "Cl₂"], correct: 2, explanation: "Kim loại Na luôn có xu hướng nhường e (tính khử)." },
+        { type: "sa", question: "Trong phản ứng S + H₂SO₄ đặc → SO₂ + H₂O, hệ số cân bằng tối giản của chất oxi hóa là bao nhiêu?", correct: ["2"], explanation: "S + 2H₂SO₄ → 3SO₂ + 2H₂O. Chất oxi hóa là H₂SO₄, hệ số là 2." },
+        { type: "mc", question: "Số oxi hóa của Mn trong KMnO₄ là:", options: ["+2", "+4", "+6", "+7"], correct: 3, explanation: "K(+1) + Mn(x) + 4O(-2) = 0 => x = +7." },
+        { type: "tf", question: "Phản ứng đốt cháy than (C + O₂ → CO₂) là phản ứng oxi hóa - khử.", correct: true, explanation: "Đúng. C từ 0 lên +4, O từ 0 xuống -2." },
+        { type: "mc", question: "Phản ứng nào sau đây KHÔNG phải là phản ứng oxi hóa - khử?", options: ["2Na + Cl₂ → 2NaCl", "Fe + 2HCl → FeCl₂ + H₂", "CaO + CO₂ → CaCO₃", "C + O₂ → CO₂"], correct: 2, explanation: "Phản ứng CaO + CO₂ → CaCO₃ không có sự thay đổi số oxi hóa." },
+        { type: "mc", question: "Trong phản ứng 2KMnO₄ + 16HCl → 2KCl + 2MnCl₂ + 5Cl₂ + 8H₂O, HCl đóng vai trò gì?", options: ["Chất oxi hóa", "Chất khử", "Môi trường", "Vừa khử vừa môi trường"], correct: 3, explanation: "HCl bị oxi hóa thành Cl₂ và tạo môi trường muối." },
+        
+        // CHƯƠNG 5: NĂNG LƯỢNG
+        { type: "mc", question: "Quy ước về dấu của biến thiên enthalpy chuẩn của phản ứng tỏa nhiệt là:", options: ["ΔrH < 0", "ΔrH > 0", "ΔrH = 0", "ΔrH ≥ 0"], correct: 0, explanation: "Phản ứng tỏa nhiệt có ΔrH < 0 (âm)." },
+        { type: "mc", question: "Điều kiện chuẩn đối với chất khí là áp suất 1 bar và nhiệt độ bao nhiêu?", options: ["0°C", "25°C (298K)", "100°C", "273K"], correct: 1, explanation: "Điều kiện chuẩn: 1 bar, 25°C." },
+        { type: "sa", question: "Enthalpy tạo thành chuẩn của các đơn chất bền vững nhất bằng bao nhiêu kJ/mol?", correct: ["0"], explanation: "Quy ước nhiệt tạo thành của đơn chất bền bằng 0." },
+        { type: "mc", question: "Cho phản ứng: 2H₂ + O₂ → 2H₂O, ΔrH = -571,6 kJ. Phản ứng này là:", options: ["Thu nhiệt", "Tỏa nhiệt", "Không đổi nhiệt", "Vừa thu vừa tỏa"], correct: 1, explanation: "ΔrH âm nên là phản ứng tỏa nhiệt." },
+        { type: "tf", question: "Phản ứng nhiệt phân CaCO₃ → CaO + CO₂ (cần đun nóng liên tục) là phản ứng thu nhiệt.", correct: true, explanation: "Đúng. Cần cung cấp nhiệt để phản ứng xảy ra." },
+        { type: "mc", question: "Công thức tính ΔrH của phản ứng dựa vào năng lượng liên kết (Eb) là:", options: ["∑Eb(sp) - ∑Eb(cđ)", "∑Eb(cđ) - ∑Eb(sp)", "∑Eb(cđ) + ∑Eb(sp)", "∑Eb(cđ) / ∑Eb(sp)"], correct: 1, explanation: "ΔrH = Tổng Eb(cđ) - Tổng Eb(sp)." },
+        { type: "mc", question: "Khi hòa tan vôi sống (CaO) vào nước, nước nóng lên. Đây là phản ứng:", options: ["Thu nhiệt", "Tỏa nhiệt", "Trung hòa", "Trao đổi"], correct: 1, explanation: "Nhiệt độ môi trường tăng lên chứng tỏ phản ứng tỏa nhiệt." },
+        { type: "sa", question: "Phản ứng có ΔrH > 0 được gọi là phản ứng gì?", correct: ["thu nhiệt"], explanation: "ΔrH dương nghĩa là hệ nhận nhiệt từ môi trường." },
+        { type: "mc", question: "Biến thiên enthalpy của phản ứng phụ thuộc vào yếu tố nào?", options: ["Nhiệt độ", "Áp suất", "Trạng thái chất", "Tất cả các ý trên"], correct: 3, explanation: "Enthalpy phụ thuộc vào điều kiện thực hiện phản ứng." },
+        { type: "tf", question: "Nhiệt tạo thành chuẩn của CO₂ chính là biến thiên enthalpy của phản ứng C(graphite) + O₂(g) → CO₂(g).", correct: true, explanation: "Đúng. Vì tạo ra 1 mol CO₂ từ các đơn chất bền." },
+
+        // CHƯƠNG 6: TỐC ĐỘ PHẢN ỨNG
+        { type: "mc", question: "Tốc độ phản ứng là đại lượng đặc trưng cho sự thay đổi yếu tố nào của chất trong một đơn vị thời gian?", options: ["Khối lượng", "Thể tích", "Nồng độ", "Nhiệt độ"], correct: 2, explanation: "Tốc độ phản ứng đặc trưng cho sự biến thiên nồng độ." },
+        { type: "mc", question: "Yếu tố nào sau đây KHÔNG ảnh hưởng đến tốc độ phản ứng của chất rắn?", options: ["Nhiệt độ", "Áp suất", "Diện tích bề mặt", "Chất xúc tác"], correct: 1, explanation: "Áp suất chỉ ảnh hưởng đáng kể đến phản ứng có chất khí." },
+        { type: "tf", question: "Khi tăng nhiệt độ, tốc độ phản ứng thường tăng lên.", correct: true, explanation: "Đúng. Nhiệt độ cao làm các hạt chuyển động nhanh hơn, va chạm hiệu quả hơn." },
+        { type: "mc", question: "Để than cháy nhanh hơn, người ta đập nhỏ than ra. Yếu tố ảnh hưởng ở đây là:", options: ["Nồng độ", "Nhiệt độ", "Diện tích bề mặt", "Áp suất"], correct: 2, explanation: "Đập nhỏ làm tăng diện tích bề mặt tiếp xúc của than với oxi." },
+        { type: "sa", question: "Chất làm tăng tốc độ phản ứng mà không bị tiêu hao sau phản ứng gọi là gì?", correct: ["chất xúc tác", "xúc tác"], explanation: "Định nghĩa chất xúc tác." },
+        { type: "mc", question: "Hệ số nhiệt độ Van't Hoff (γ) cho biết tốc độ phản ứng tăng bao nhiêu lần khi nhiệt độ tăng thêm:", options: ["1 độ C", "10 độ C", "100 độ C", "20 độ C"], correct: 1, explanation: "Quy tắc Van't Hoff áp dụng cho mỗi khoảng tăng 10 độ C." },
+        { type: "mc", question: "Thực phẩm bảo quản trong tủ lạnh giữ được lâu hơn là do yếu tố nào?", options: ["Nhiệt độ thấp", "Áp suất thấp", "Nồng độ thấp", "Chất xúc tác"], correct: 0, explanation: "Nhiệt độ thấp làm giảm tốc độ các phản ứng phân hủy." },
+        { type: "mc", question: "Đối với phản ứng có chất khí, khi tăng áp suất, tốc độ phản ứng tăng là do:", options: ["Nồng độ chất khí tăng", "Nồng độ chất khí giảm", "Nhiệt độ tăng", "Diện tích bề mặt tăng"], correct: 0, explanation: "Nén khí (tăng áp suất) làm giảm thể tích, dẫn đến nồng độ chất khí tăng." },
+        { type: "tf", question: "Chất ức chế làm tăng tốc độ phản ứng.", correct: false, explanation: "Sai. Chất ức chế làm giảm tốc độ phản ứng." },
+        { type: "mc", question: "Dùng nồi áp suất để ninh xương nhanh nhừ là ứng dụng của yếu tố:", options: ["Nồng độ", "Nhiệt độ", "Chất xúc tác", "Diện tích bề mặt"], correct: 1, explanation: "Nồi áp suất làm tăng nhiệt độ sôi của nước (trên 100°C)." },
+        
+        // CHƯƠNG 7: HALOGEN
+        { type: "mc", question: "Cấu hình electron lớp ngoài cùng của nhóm Halogen là:", options: ["ns²np³", "ns²np⁴", "ns²np⁵", "ns²np⁶"], correct: 2, explanation: "Halogen thuộc nhóm VIIA, có 7e lớp ngoài cùng." },
+        { type: "mc", question: "Ở điều kiện thường, Halogen nào ở thể lỏng?", options: ["Fluorine", "Chlorine", "Bromine", "Iodine"], correct: 2, explanation: "F₂, Cl₂ (khí); Br₂ (lỏng); I₂ (rắn)." },
+        { type: "sa", question: "Khi đun nóng, Iodine chuyển từ rắn sang hơi. Hiện tượng này gọi là gì?", correct: ["thăng hoa", "sự thăng hoa"], explanation: "Đây là tính chất vật lý đặc trưng của Iodine." },
+        { type: "mc", question: "Dung dịch acid nào dùng để khắc chữ lên thủy tinh?", options: ["HCl", "HBr", "HF", "HI"], correct: 2, explanation: "HF ăn mòn thủy tinh theo phản ứng: SiO₂ + 4HF → SiF₄ + 2H₂O." },
+        { type: "mc", question: "Trong các halogen, nguyên tố nào có tính oxi hóa mạnh nhất?", options: ["F₂", "Cl₂", "Br₂", "I₂"], correct: 0, explanation: "Tính oxi hóa giảm dần từ Fluorine đến Iodine." },
+        { type: "tf", question: "AgCl là kết tủa màu trắng.", correct: true, explanation: "Đúng. AgCl trắng, AgBr vàng nhạt, AgI vàng đậm." },
+        { type: "mc", question: "Nước Javel là hỗn hợp của các chất nào?", options: ["NaCl, NaClO", "HCl, HClO", "NaCl, KClO", "KCl, KClO"], correct: 0, explanation: "Cl₂ + 2NaOH → NaCl + NaClO + H₂O." },
+        { type: "mc", question: "Phản ứng nào chứng minh tính oxi hóa: Cl₂ > Br₂?", options: ["Cl₂ + 2NaBr → 2NaCl + Br₂", "Br₂ + 2NaCl → 2NaBr + Cl₂", "H₂ + Cl₂ → 2HCl", "Cl₂ + H₂O ⇌ HCl + HClO"], correct: 0, explanation: "Halogen mạnh đẩy halogen yếu hơn ra khỏi muối." },
+        { type: "sa", question: "Hợp chất AgI có màu gì?", correct: ["vàng", "màu vàng", "vàng đậm"], explanation: "Kết tủa Silver iodide (AgI) có màu vàng." },
+        { type: "mc", question: "Nguồn chính để điều chế Iodine trong công nghiệp là:", options: ["Nước biển", "Rong biển", "Quặng mỏ", "Không khí"], correct: 1, explanation: "Rong biển tích tụ I- với nồng độ cao." },
+        
+        // CÁC CÂU BỔ SUNG (CHO ĐỦ 50)
+        { type: "mc", question: "Số oxi hóa của O trong H₂O₂ là:", options: ["-2", "-1", "0", "+2"], correct: 1, explanation: "Trong peroxide, O có số oxi hóa -1." },
+        { type: "mc", question: "Phản ứng nhiệt nhôm: 2Al + Fe₂O₃ → Al₂O₃ + 2Fe. Al đóng vai trò là:", options: ["Chất oxi hóa", "Chất khử", "Môi trường", "Acid"], correct: 1, explanation: "Al từ 0 lên +3 (nhường e) nên là chất khử." },
+        { type: "tf", question: "Enzyme là chất xúc tác sinh học.", correct: true, explanation: "Đúng." },
+        { type: "mc", question: "Đơn vị thường dùng của tốc độ phản ứng là:", options: ["mol/L", "mol/(L.s)", "s/mol", "L/mol"], correct: 1, explanation: "Biến thiên nồng độ (M) trên thời gian (s)." },
+        { type: "sa", question: "Tên gọi của NaClO là gì? (Viết tiếng Việt: Natri ...)", correct: ["natri hypoclorit", "natri hypochlorit"], explanation: "Tên gọi của muối NaClO." },
+        { type: "mc", question: "Liên kết trong phân tử Cl₂ là liên kết:", options: ["Cộng hóa trị không cực", "Cộng hóa trị có cực", "Ion", "Kim loại"], correct: 0, explanation: "Hai nguyên tử giống nhau có độ âm điện bằng nhau." },
+        { type: "mc", question: "Kim loại nào sau đây tác dụng mãnh liệt với nước ở nhiệt độ thường?", options: ["Fe", "Cu", "Na", "Ag"], correct: 2, explanation: "Na là kim loại kiềm hoạt động mạnh." },
+        { type: "sa", question: "Để nhận biết ion Cl-, ta dùng dung dịch gì?", correct: ["agno3", "bạc nitrat"], explanation: "AgNO3 tạo kết tủa trắng AgCl." },
+        { type: "mc", question: "Chất nào sau đây được dùng để tráng phim ảnh?", options: ["AgBr", "AgCl", "AgF", "AgNO₃"], correct: 0, explanation: "AgBr nhạy cảm với ánh sáng." }
+  ,
+         // --- TIẾP THEO PHẦN 2 (CÂU 51 - 100) ---
+    
+    // CHƯƠNG 4: OXI HÓA KHỬ (TIẾP)
+    {
+        type: "mc",
+        question: "Trong phản ứng: MnO₂ + 4HCl → MnCl₂ + Cl₂ + 2H₂O, vai trò của HCl là gì?",
+        options: ["Chất oxi hóa", "Chất khử", "Chất tạo môi trường", "Vừa là chất khử, vừa là môi trường"],
+        correct: 3,
+        explanation: "Một phần Cl⁻ bị oxi hóa thành Cl₂ (khử), một phần giữ nguyên tạo muối MnCl₂ (môi trường)."
+    },
+    {
+        type: "sa",
+        question: "Số oxi hóa của nguyên tử N trong phân tử HNO₃ là bao nhiêu? (Nhập số kèm dấu)",
+        correct: ["+5"],
+        explanation: "H(+1) + N(x) + 3*O(-2) = 0 => 1 + x - 6 = 0 => x = +5."
+    },
+    {
+        type: "mc",
+        question: "Cặp chất nào sau đây cùng tồn tại trong một dung dịch (không phản ứng với nhau)?",
+        options: ["FeCl₂ và Cl₂", "Cu và AgNO₃", "Fe(NO₃)₂ và AgNO₃", "Fe(NO₃)₃ và AgNO₃"],
+        correct: 3,
+        explanation: "Fe³⁺ không thể khử Ag⁺ được nữa (Fe²⁺ mới phản ứng được). Các cặp còn lại đều xảy ra phản ứng oxi hóa khử."
+    },
+    {
+        type: "tf",
+        question: "Số oxi hóa của Flo trong hợp chất luôn là -1.",
+        correct: true,
+        explanation: "Đúng. Vì Flo có độ âm điện lớn nhất trong tất cả các nguyên tố."
+    },
+    {
+        type: "mc",
+        question: "Trong phản ứng: 3Cl₂ + 6KOH → 5KCl + KClO₃ + 3H₂O, Cl₂ đóng vai trò gì?",
+        options: ["Chất oxi hóa", "Chất khử", "Vừa oxi hóa vừa khử", "Không oxi hóa cũng không khử"],
+        correct: 2,
+        explanation: "Cl từ 0 xuống -1 (KCl) và lên +5 (KClO₃). Đây là phản ứng tự oxi hóa khử."
+    },
+    {
+        type: "mc",
+        question: "Để bảo quản dung dịch FeSO₄ trong phòng thí nghiệm không bị chuyển thành Fe₂(SO₄)₃, người ta thường ngâm vào đó:",
+        options: ["Một đinh sắt sạch", "Một dây đồng", "Một ít kẽm", "Một ít axit HCl"],
+        correct: 0,
+        explanation: "Sắt dư sẽ khử Fe³⁺ (nếu sinh ra do oxi không khí) quay lại Fe²⁺: Fe + 2Fe³⁺ → 3Fe²⁺."
+    },
+    {
+        type: "sa",
+        question: "Cho phản ứng aAl + bHNO₃ → cAl(NO₃)₃ + dNO + eH₂O. Tổng hệ số (a+b) tối giản là bao nhiêu?",
+        correct: ["5"],
+        explanation: "Cân bằng: Al + 4HNO₃ → Al(NO₃)₃ + NO + 2H₂O. Vậy a=1, b=4. Tổng là 5."
+    },
+    {
+        type: "mc",
+        question: "Số oxi hóa của Cr trong K₂Cr₂O₇ là:",
+        options: ["+3", "+6", "+7", "+2"],
+        correct: 1,
+        explanation: "2(+1) + 2x + 7(-2) = 0 => 2x - 12 = 0 => x = +6."
+    },
+    {
+        type: "tf",
+        question: "Trong phản ứng oxi hóa khử, sự oxi hóa và sự khử diễn ra tại hai thời điểm khác nhau.",
+        correct: false,
+        explanation: "Sai. Sự oxi hóa và sự khử luôn diễn ra đồng thời."
+    },
+    {
+        type: "mc",
+        question: "Ion nào sau đây có tính oxi hóa mạnh nhất?",
+        options: ["Al³⁺", "Zn²⁺", "Fe²⁺", "Ag⁺"],
+        correct: 3,
+        explanation: "Trong dãy điện hóa, ion Ag⁺ đứng sau cùng trong nhóm này nên có tính oxi hóa mạnh nhất."
+    },
+
+    // CHƯƠNG 5: NĂNG LƯỢNG HÓA HỌC (TIẾP)
+    {
+        type: "mc",
+        question: "Phản ứng nhiệt phân Cu(OH)₂ thành CuO và H₂O cần cung cấp nhiệt. Dấu của ΔrH là:",
+        options: ["Dương (+)", "Âm (-)", "Bằng 0", "Không xác định"],
+        correct: 0,
+        explanation: "Phản ứng thu nhiệt có ΔrH > 0."
+    },
+    {
+        type: "sa",
+        question: "Nhiệt lượng tỏa ra khi đốt cháy hoàn toàn 1 mol chất được gọi là nhiệt gì? (3 từ)",
+        correct: ["nhiệt cháy", "nhiệt đốt cháy"],
+        explanation: "Định nghĩa nhiệt đốt cháy chuẩn."
+    },
+    {
+        type: "mc",
+        question: "Cho các chất: O₂(g), N₂(g), Cl₂(g), CO₂(g). Chất nào có nhiệt tạo thành chuẩn KHÁC 0?",
+        options: ["O₂", "N₂", "CO₂", "Cl₂"],
+        correct: 2,
+        explanation: "CO₂ là hợp chất. Các chất còn lại là đơn chất bền nên nhiệt tạo thành bằng 0."
+    },
+    {
+        type: "mc",
+        question: "Phương trình nhiệt hóa học: C(s) + H₂O(g) → CO(g) + H₂(g)  ΔrH = +131.25 kJ. Phản ứng này:",
+        options: ["Tỏa nhiệt", "Thu nhiệt", "Tự xảy ra ở thường", "Không trao đổi nhiệt"],
+        correct: 1,
+        explanation: "ΔrH dương là phản ứng thu nhiệt."
+    },
+    {
+        type: "tf",
+        question: "Năng lượng liên kết (Eb) là năng lượng cần thiết để phá vỡ 1 mol liên kết cộng hóa trị ở thể khí.",
+        correct: true,
+        explanation: "Đúng. Đây là định nghĩa năng lượng liên kết."
+    },
+    {
+        type: "mc",
+        question: "Để tính ΔrH của phản ứng dựa trên nhiệt tạo thành (ΔfH), ta dùng công thức:",
+        options: ["Tổng ΔfH(sp) - Tổng ΔfH(cđ)", "Tổng ΔfH(cđ) - Tổng ΔfH(sp)", "Tổng ΔfH(sp) + Tổng ΔfH(cđ)", "Trung bình cộng các ΔfH"],
+        correct: 0,
+        explanation: "ΔrH = ∑ΔfH(sản phẩm) - ∑ΔfH(chất đầu)."
+    },
+    {
+        type: "sa",
+        question: "Khi bạn xoa cồn vào tay thấy mát lạnh. Quá trình bay hơi của cồn là quá trình gì? (Thu nhiệt/Tỏa nhiệt)",
+        correct: ["thu nhiệt"],
+        explanation: "Cồn bay hơi lấy nhiệt từ tay bạn, nên đó là quá trình thu nhiệt."
+    },
+    {
+        type: "mc",
+        question: "Năng lượng liên kết của N≡N rất lớn (945 kJ/mol) giải thích tính chất gì của khí Nitơ?",
+        options: ["Tính oxi hóa mạnh", "Tính khử mạnh", "Khá trơ về mặt hóa học ở nhiệt độ thường", "Tan tốt trong nước"],
+        correct: 2,
+        explanation: "Liên kết ba bền vững khó bị phá vỡ nên Nitơ khá trơ ở nhiệt độ thường."
+    },
+    {
+        type: "mc",
+        question: "Phản ứng nào sau đây chắc chắn là phản ứng tỏa nhiệt?",
+        options: ["Phản ứng đốt cháy nhiên liệu", "Phản ứng nhiệt phân", "Phản ứng quang hợp", "Phản ứng điện phân"],
+        correct: 0,
+        explanation: "Đốt cháy luôn tỏa nhiệt lượng lớn."
+    },
+    {
+        type: "mc",
+        question: "Nếu phản ứng thuận tỏa nhiệt thì phản ứng nghịch sẽ:",
+        options: ["Tỏa nhiệt", "Thu nhiệt", "Không đổi nhiệt", "Tùy điều kiện"],
+        correct: 1,
+        explanation: "Nhiệt phản ứng thuận và nghịch có giá trị tuyệt đối bằng nhau nhưng trái dấu."
+    },
+
+    // CHƯƠNG 6: TỐC ĐỘ PHẢN ỨNG (TIẾP)
+    {
+        type: "mc",
+        question: "Để xác định tốc độ phản ứng: Zn + 2HCl → ZnCl₂ + H₂, ta có thể đo:",
+        options: ["Thể tích khí H₂ thoát ra theo thời gian", "Khối lượng Zn tăng lên", "Màu sắc dung dịch", "Khối lượng HCl tăng lên"],
+        correct: 0,
+        explanation: "Đo thể tích khí thoát ra là cách phổ biến để xác định tốc độ phản ứng sinh khí."
+    },
+    {
+        type: "sa",
+        question: "Tốc độ phản ứng kí hiệu là chữ cái gì?",
+        correct: ["v"],
+        explanation: "Kí hiệu quốc tế của tốc độ (velocity) phản ứng là v."
+    },
+    {
+        type: "mc",
+        question: "Tại sao nhai kỹ thức ăn lại giúp tiêu hóa tốt hơn?",
+        options: ["Tăng nhiệt độ thức ăn", "Tăng diện tích tiếp xúc với enzyme", "Giảm nồng độ axit dạ dày", "Tăng áp suất dạ dày"],
+        correct: 1,
+        explanation: "Nhai kỹ làm nhỏ thức ăn, tăng diện tích bề mặt tiếp xúc với dịch vị và enzyme."
+    },
+    {
+        type: "mc",
+        question: "Cho phản ứng A + B → C. Nồng độ ban đầu của A là 0.5M, sau 10 giây nồng độ A còn 0.3M. Tốc độ trung bình theo A là:",
+        options: ["0.02 M/s", "0.05 M/s", "0.03 M/s", "0.2 M/s"],
+        correct: 0,
+        explanation: "v = |0.3 - 0.5| / 10 = 0.2 / 10 = 0.02 M/s."
+    },
+    {
+        type: "tf",
+        question: "Chất xúc tác bị tiêu hao một lượng nhỏ sau khi phản ứng kết thúc.",
+        correct: false,
+        explanation: "Sai. Chất xúc tác được hoàn trả lại nguyên vẹn về lượng và chất sau phản ứng."
+    },
+    {
+        type: "mc",
+        question: "Yếu tố nào sau đây làm GIẢM tốc độ phản ứng?",
+        options: ["Tăng nhiệt độ", "Dùng chất xúc tác", "Pha loãng dung dịch chất tham gia", "Nghiền nhỏ chất rắn"],
+        correct: 2,
+        explanation: "Pha loãng làm giảm nồng độ chất tan, dẫn đến giảm số va chạm hiệu quả => giảm tốc độ."
+    },
+    {
+        type: "mc",
+        question: "Bảo quản máu và các mẫu phẩm sinh học ở nhiệt độ thấp là ứng dụng của yếu tố:",
+        options: ["Áp suất", "Nhiệt độ", "Nồng độ", "Chất xúc tác"],
+        correct: 1,
+        explanation: "Hạ nhiệt độ để kìm hãm các phản ứng phân hủy."
+    },
+    {
+        type: "sa",
+        question: "Với phản ứng có chất khí, khi tăng áp suất chung của hệ thì tốc độ phản ứng tăng hay giảm?",
+        correct: ["tăng"],
+        explanation: "Tăng áp suất làm tăng nồng độ khí => tăng tốc độ."
+    },
+    {
+        type: "mc",
+        question: "Hệ số nhiệt độ γ = 3. Tốc độ phản ứng tăng bao nhiêu lần khi tăng nhiệt độ từ 30°C lên 50°C?",
+        options: ["3 lần", "6 lần", "9 lần", "27 lần"],
+        correct: 2,
+        explanation: "Số lần tăng = 3^((50-30)/10) = 3^2 = 9 lần."
+    },
+    {
+        type: "mc",
+        question: "Trong công nghiệp sản xuất H₂SO₄, người ta dùng V₂O₅ để oxi hóa SO₂ thành SO₃. V₂O₅ là:",
+        options: ["Chất tham gia", "Chất xúc tác", "Chất ức chế", "Sản phẩm phụ"],
+        correct: 1,
+        explanation: "V₂O₅ là chất xúc tác dương cho phản ứng này."
+    },
+
+    // CHƯƠNG 7: HALOGEN (TIẾP)
+    {
+        type: "mc",
+        question: "Halogen nào sau đây thăng hoa khi đun nóng?",
+        options: ["F₂", "Cl₂", "Br₂", "I₂"],
+        correct: 3,
+        explanation: "Iodine (I₂) có tính thăng hoa (từ rắn sang hơi)."
+    },
+    {
+        type: "mc",
+        question: "Dãy axit nào được sắp xếp theo chiều tính axit TĂNG dần?",
+        options: ["HI < HBr < HCl < HF", "HF < HCl < HBr < HI", "HCl < HBr < HI < HF", "HF < HI < HBr < HCl"],
+        correct: 1,
+        explanation: "Do độ bền liên kết H-X giảm dần từ F đến I nên tính axit tăng dần: HF < HCl < HBr < HI."
+    },
+    {
+        type: "sa",
+        question: "Dung dịch AgNO₃ không tạo kết tủa với muối halogenua nào? (Viết công thức hóa học)",
+        correct: ["naf", "f-", "kf"],
+        explanation: "AgF tan trong nước, không tạo kết tủa. (AgCl, AgBr, AgI đều kết tủa)."
+    },
+    {
+        type: "mc",
+        question: "Clo ẩm có tính tẩy màu vì:",
+        options: ["Clo tác dụng với nước tạo HClO có tính oxi hóa mạnh", "Clo là chất khí độc", "Clo có tính khử mạnh", "Clo hấp thụ màu"],
+        correct: 0,
+        explanation: "Cl₂ + H₂O ⇌ HCl + HClO. HClO (axit hipoclorơ) có tính oxi hóa mạnh làm mất màu phẩm nhuộm."
+    },
+    {
+        type: "tf",
+        question: "Trong tự nhiên, các halogen tồn tại chủ yếu ở dạng đơn chất.",
+        correct: false,
+        explanation: "Sai. Do hoạt động hóa học mạnh, halogen chủ yếu tồn tại ở dạng hợp chất (muối)."
+    },
+    {
+        type: "mc",
+        question: "Nguyên tố nào được mệnh danh là 'kẻ hủy diệt tầng ozon'?",
+        options: ["Fluorine", "Chlorine (trong CFC)", "Bromine", "Iodine"],
+        correct: 1,
+        explanation: "Các hợp chất CFC chứa Clo khi lên tầng bình lưu sẽ bị phân hủy tạo gốc Cl tự do phá hủy Ozon."
+    },
+    {
+        type: "mc",
+        question: "Phản ứng của H₂ với Halogen nào xảy ra mãnh liệt nhất, nổ ngay cả trong bóng tối?",
+        options: ["F₂", "Cl₂", "Br₂", "I₂"],
+        correct: 0,
+        explanation: "Flo phản ứng nổ với H₂ ngay cả ở nhiệt độ rất thấp và trong bóng tối."
+    },
+    {
+        type: "mc",
+        question: "Để nhận biết hồ tinh bột, người ta dùng:",
+        options: ["Dung dịch Brom", "Dung dịch Iot", "Dung dịch Clo", "Dung dịch Flo"],
+        correct: 1,
+        explanation: "Iot gặp hồ tinh bột tạo ra màu xanh tím đặc trưng."
+    },
+    {
+        type: "mc",
+        question: "Muối AgBr có màu gì?",
+        options: ["Trắng", "Vàng nhạt", "Vàng đậm", "Đen"],
+        correct: 1,
+        explanation: "AgCl (trắng), AgBr (vàng nhạt), AgI (vàng đậm)."
+    },
+    {
+        type: "sa",
+        question: "Loại muối nào được bổ sung vào muối ăn để phòng bệnh bướu cổ?",
+        correct: ["iot", "iod", "muối iot", "ki", "kio3"],
+        explanation: "Bổ sung Iot (dưới dạng KI hoặc KIO₃) giúp phòng ngừa các rối loạn do thiếu Iot."
+    },
+
+    // CÁC CÂU BỔ SUNG TỔNG HỢP KIẾN THỨC
+    {
+        type: "mc",
+        question: "Cation M²⁺ có cấu hình electron lớp ngoài cùng là 2s²2p⁶. M là nguyên tố nào?",
+        options: ["Mg", "Ca", "Na", "Al"],
+        correct: 0,
+        explanation: "Cấu hình 2s²2p⁶ tương ứng với Neon (10e). M²⁺ có 10e => M có 12e. Đó là Mg."
+    },
+    {
+        type: "mc",
+        question: "Trong phản ứng: SO₂ + Br₂ + 2H₂O → 2HBr + H₂SO₄. SO₂ đóng vai trò là:",
+        options: ["Chất khử", "Chất oxi hóa", "Môi trường", "Vừa oxi hóa vừa khử"],
+        correct: 0,
+        explanation: "S từ +4 lên +6 (H₂SO₄) nên SO₂ là chất khử."
+    },
+    {
+        type: "mc",
+        question: "Yếu tố nào làm thay đổi hằng số cân bằng Kc của phản ứng?",
+        options: ["Nồng độ", "Áp suất", "Nhiệt độ", "Chất xúc tác"],
+        correct: 2,
+        explanation: "Chỉ có nhiệt độ mới làm thay đổi giá trị hằng số cân bằng."
+    },
+    {
+        type: "tf",
+        question: "Phản ứng phân hủy H₂O₂ chậm, nhưng khi thêm bột MnO₂ thì bọt khí thoát ra rất nhanh. MnO₂ là chất xúc tác.",
+        correct: true,
+        explanation: "Đúng. MnO₂ xúc tác cho phản ứng phân hủy H₂O₂."
+    },
+    {
+        type: "mc",
+        question: "Khí HCl tan nhiều trong nước tạo thành dung dịch axit clohydric. Quỳ tím chuyển sang màu gì khi nhúng vào dung dịch này?",
+        options: ["Xanh", "Đỏ", "Tím", "Không màu"],
+        correct: 1,
+        explanation: "Axit làm quỳ tím hóa đỏ."
+    },
+    {
+        type: "sa",
+        question: "Công thức hóa học của thuốc tím là gì?",
+        correct: ["kmno4"],
+        explanation: "Kali pemanganat (KMnO₄)."
+    },
+    {
+        type: "mc",
+        question: "Liên kết trong phân tử N₂ là:",
+        options: ["Liên kết đơn", "Liên kết đôi", "Liên kết ba", "Liên kết ion"],
+        correct: 2,
+        explanation: "N≡N, liên kết ba rất bền vững."
+    },
+    {
+        type: "mc",
+        question: "Ở trạng thái cơ bản, nguyên tử nhóm Halogen có bao nhiêu electron độc thân?",
+        options: ["1", "2", "3", "5"],
+        correct: 0,
+        explanation: "Cấu hình ns²np⁵ có 1 electron độc thân ở phân lớp p."
+    },
+    {
+        type: "mc",
+        question: "Phản ứng nào sau đây được dùng để điều chế khí Clo trong phòng thí nghiệm?",
+        options: ["Điện phân dung dịch NaCl có màng ngăn", "MnO₂ + HCl đặc", "Điện phân nóng chảy NaCl", "H₂ + Cl₂"],
+        correct: 1,
+        explanation: "Trong PTN dùng chất oxi hóa mạnh (MnO₂, KMnO₄...) tác dụng với HCl đặc."
+    },
+    {
+        type: "mc",
+        question: "Chất nào sau đây không phản ứng với dung dịch HCl?",
+        options: ["Fe", "Cu", "CuO", "NaOH"],
+        correct: 1,
+        explanation: "Cu đứng sau H trong dãy hoạt động hóa học nên không tác dụng với HCl."
+    }
+,
+        // --- TIẾP THEO PHẦN 3 (CÂU 101 - 150) ---
+
+    // CHƯƠNG 4: PHẢN ỨNG OXI HÓA - KHỬ (Nâng cao & Mở rộng)
+    {
+        type: "mc",
+        question: "Trong phản ứng: Cu + 2H₂SO₄ (đặc, nóng) → CuSO₄ + SO₂ + 2H₂O. Số nguyên tử Cu bị oxi hóa là:",
+        options: ["1", "2", "3", "4"],
+        correct: 0,
+        explanation: "1 nguyên tử Cu nhường 2e để tạo thành 1 ion Cu²⁺."
+    },
+    {
+        type: "sa",
+        question: "Số oxi hóa của nguyên tử Cl trong hợp chất HClO₃ là bao nhiêu? (Nhập số kèm dấu)",
+        correct: ["+5"],
+        explanation: "H(+1) + Cl(x) + 3*O(-2) = 0 => 1 + x - 6 = 0 => x = +5."
+    },
+    {
+        type: "tf",
+        question: "Phản ứng giữa axit và bazơ (phản ứng trung hòa) luôn là phản ứng oxi hóa - khử.",
+        correct: false,
+        explanation: "Sai. Phản ứng trung hòa (ví dụ: HCl + NaOH → NaCl + H₂O) không có sự thay đổi số oxi hóa."
+    },
+    {
+        type: "mc",
+        question: "Cặp oxi hóa - khử nào sau đây xảy ra phản ứng?",
+        options: ["Fe + ZnSO₄", "Ag + HCl", "Cu + AgNO₃", "Cu + FeSO₄"],
+        correct: 2,
+        explanation: "Cu đứng trước Ag trong dãy điện hóa nên đẩy được Ag ra khỏi muối: Cu + 2AgNO₃ → Cu(NO₃)₂ + 2Ag."
+    },
+    {
+        type: "mc",
+        question: "Trong các hợp chất sau, hợp chất nào chứa Nitrogen có số oxi hóa cao nhất?",
+        options: ["NO", "NO₂", "HNO₃", "NH₃"],
+        correct: 2,
+        explanation: "NO(+2), NO₂(+4), HNO₃(+5), NH₃(-3). HNO₃ cao nhất."
+    },
+    {
+        type: "mc",
+        question: "Chất nào sau đây vừa có tính oxi hóa, vừa có tính khử?",
+        options: ["H₂SO₄ đặc", "HNO₃", "H₂O₂", "F₂"],
+        correct: 2,
+        explanation: "Oxy trong H₂O₂ có số oxi hóa -1 (trung gian) nên có thể tăng lên 0 hoặc giảm xuống -2."
+    },
+    {
+        type: "sa",
+        question: "Cân bằng phản ứng: Fe + Cl₂ → FeCl₃. Tổng hệ số cân bằng (số nguyên tối giản) là bao nhiêu?",
+        correct: ["7"],
+        explanation: "Phương trình: 2Fe + 3Cl₂ → 2FeCl₃. Tổng hệ số: 2 + 3 + 2 = 7."
+    },
+    {
+        type: "mc",
+        question: "Để làm sạch khí O₂ có lẫn tạp chất Cl₂, người ta dẫn hỗn hợp khí qua dung dịch nào?",
+        options: ["NaOH dư", "H₂SO₄ đặc", "HCl", "Nước"],
+        correct: 0,
+        explanation: "NaOH phản ứng với Cl₂ (loại bỏ Cl₂), O₂ không phản ứng bay ra."
+    },
+    {
+        type: "tf",
+        question: "Số oxi hóa của kim loại trong đơn chất luôn bằng hóa trị của nó.",
+        correct: false,
+        explanation: "Sai. Số oxi hóa của kim loại trong **đơn chất** luôn bằng 0. Trong hợp chất mới bằng hóa trị (kèm dấu +)."
+    },
+    {
+        type: "mc",
+        question: "Trong phản ứng điện phân nóng chảy NaCl để điều chế Na, quá trình nào xảy ra ở cực âm (Cathode)?",
+        options: ["Sự oxi hóa Na⁺", "Sự khử Na⁺", "Sự oxi hóa Cl⁻", "Sự khử Cl⁻"],
+        correct: 1,
+        explanation: "Tại Cathode (cực âm) xảy ra sự khử ion dương: Na⁺ + 1e → Na."
+    },
+
+    // CHƯƠNG 5: NĂNG LƯỢNG HÓA HỌC (Ứng dụng & Tính toán)
+    {
+        type: "mc",
+        question: "Phản ứng nhiệt phân: CaCO₃(s) → CaO(s) + CO₂(g) có ΔrH = +178.49 kJ. Để thu được 1 mol CaO cần:",
+        options: ["Cung cấp 178.49 kJ nhiệt lượng", "Giải phóng 178.49 kJ nhiệt lượng", "Cung cấp 178.49 J nhiệt lượng", "Làm lạnh hệ thống"],
+        correct: 0,
+        explanation: "ΔrH dương là phản ứng thu nhiệt, cần cung cấp nhiệt lượng tương ứng."
+    },
+    {
+        type: "sa",
+        question: "Phương trình nhiệt hóa học: N₂ + 3H₂ → 2NH₃ ΔrH = -92 kJ. Lượng nhiệt tỏa ra khi tạo thành 1 mol NH₃ là bao nhiêu kJ?",
+        correct: ["46"],
+        explanation: "Tạo 2 mol NH₃ tỏa 92 kJ => Tạo 1 mol tỏa 92/2 = 46 kJ."
+    },
+    {
+        type: "mc",
+        question: "Cho biết năng lượng liên kết: Eb(H-H)=436 kJ/mol, Eb(F-F)=159 kJ/mol, Eb(H-F)=565 kJ/mol. Tính ΔrH của phản ứng H₂ + F₂ → 2HF?",
+        options: ["-535 kJ", "+535 kJ", "-267.5 kJ", "+267.5 kJ"],
+        correct: 0,
+        explanation: "ΔrH = Eb(H-H) + Eb(F-F) - 2*Eb(H-F) = 436 + 159 - 2*565 = 595 - 1130 = -535 kJ."
+    },
+    {
+        type: "mc",
+        question: "Điều kiện chuẩn của nhiệt động học bao gồm nồng độ chất tan là:",
+        options: ["0.1 mol/L", "1 mol/L", "10 mol/L", "Bão hòa"],
+        correct: 1,
+        explanation: "Điều kiện chuẩn: chất tan có nồng độ 1 mol/L (1M)."
+    },
+    {
+        type: "tf",
+        question: "Phản ứng tỏa nhiệt luôn xảy ra tự phát ở mọi nhiệt độ.",
+        correct: false,
+        explanation: "Sai. Khả năng tự phát còn phụ thuộc vào biến thiên entropy (độ hỗn loạn) và nhiệt độ, không chỉ enthalpy."
+    },
+    {
+        type: "mc",
+        question: "Khí Gas (LPG) dùng để nấu ăn chủ yếu chứa Propane và Butane. Quá trình đốt gas là quá trình:",
+        options: ["Thu nhiệt", "Tỏa nhiệt mạnh", "Biến đổi vật lý", "Hòa tan"],
+        correct: 1,
+        explanation: "Đốt cháy nhiên liệu luôn tỏa nhiệt mạnh để phục vụ nấu nướng."
+    },
+    {
+        type: "mc",
+        question: "Dựa vào giá trị ΔfH, chất nào bền nhiệt nhất trong các oxit sau: Al₂O₃ (-1675.7 kJ/mol), Fe₂O₃ (-824.2 kJ/mol), CuO (-157.3 kJ/mol)?",
+        options: ["Al₂O₃", "Fe₂O₃", "CuO", "Bền như nhau"],
+        correct: 0,
+        explanation: "Chất có ΔfH càng âm (giá trị tuyệt đối càng lớn) thì càng bền vững."
+    },
+    {
+        type: "sa",
+        question: "Để làm lạnh nhanh đồ uống, người ta dùng 'đá khô'. Đá khô là chất gì ở trạng thái rắn? (Viết công thức)",
+        correct: ["co2"],
+        explanation: "Đá khô là CO₂ rắn, khi thăng hoa thu nhiệt rất lớn."
+    },
+    {
+        type: "mc",
+        question: "Biến thiên enthalpy của phản ứng tạo thành Ozon: 3O₂(g) → 2O₃(g) là dương. Điều này cho biết:",
+        options: ["Ozon bền hơn Oxi", "Oxi bền hơn Ozon", "Hai chất bền như nhau", "Phản ứng tỏa nhiệt"],
+        correct: 1,
+        explanation: "Phản ứng thu nhiệt (ΔH > 0) nghĩa là O₃ ở mức năng lượng cao hơn O₂, do đó O₃ kém bền hơn O₂."
+    },
+    {
+        type: "mc",
+        question: "Trong cơ thể, Glucose bị oxi hóa tỏa năng lượng. Phương trình nào biểu diễn đúng?",
+        options: ["C₆H₁₂O₆ + 6O₂ → 6CO₂ + 6H₂O (ΔrH < 0)", "C₆H₁₂O₆ + 6O₂ → 6CO₂ + 6H₂O (ΔrH > 0)", "6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂ (ΔrH < 0)", "Cả A và C đều sai"],
+        correct: 0,
+        explanation: "Quá trình hô hấp tế bào là quá trình tỏa năng lượng (tỏa nhiệt)."
+    },
+
+    // CHƯƠNG 6: TỐC ĐỘ PHẢN ỨNG (Mở rộng)
+    {
+        type: "mc",
+        question: "Cho phản ứng: 2SO₂ + O₂ ⇌ 2SO₃. Hằng số tốc độ k của phản ứng thuận KHÔNG phụ thuộc vào:",
+        options: ["Nồng độ SO₂", "Nhiệt độ", "Chất xúc tác", "Bản chất chất phản ứng"],
+        correct: 0,
+        explanation: "Hằng số tốc độ k chỉ phụ thuộc nhiệt độ, xúc tác và bản chất chất, KHÔNG phụ thuộc nồng độ."
+    },
+    {
+        type: "sa",
+        question: "Để bảo quản thực phẩm, người ta hút chân không (loại bỏ không khí). Yếu tố nào đã được tác động để giảm tốc độ oxi hóa?",
+        correct: ["nồng độ", "nồng độ oxi", "nồng độ oxy"],
+        explanation: "Giảm nồng độ khí Oxi tiếp xúc với thực phẩm."
+    },
+    {
+        type: "mc",
+        question: "Khi nhiệt độ tăng thêm 10°C, tốc độ phản ứng tăng 3 lần. Nếu đang ở 20°C (tốc độ v) tăng lên 40°C thì tốc độ là:",
+        options: ["3v", "6v", "9v", "12v"],
+        correct: 2,
+        explanation: "Tăng 2 khoảng 10 độ => tăng 3^2 = 9 lần."
+    },
+    {
+        type: "tf",
+        question: "Diện tích bề mặt chất rắn càng lớn thì tốc độ phản ứng càng chậm.",
+        correct: false,
+        explanation: "Sai. Diện tích bề mặt càng lớn, tốc độ phản ứng càng nhanh (do tăng số va chạm)."
+    },
+    {
+        type: "mc",
+        question: "Enzyme catalase trong gan giúp phân hủy chất độc nào?",
+        options: ["Ethanol", "H₂O₂", "CO₂", "Axit béo"],
+        correct: 1,
+        explanation: "Catalase xúc tác phản ứng phân hủy H₂O₂ thành nước và oxy."
+    },
+    {
+        type: "mc",
+        question: "Trong phòng thí nghiệm, để điều chế khí oxi từ H₂O₂ nhanh hơn, người ta thêm một ít bột MnO₂. MnO₂ là:",
+        options: ["Chất tham gia", "Chất xúc tác", "Chất môi trường", "Chất chỉ thị"],
+        correct: 1,
+        explanation: "MnO₂ đóng vai trò xúc tác làm tăng tốc độ phân hủy H₂O₂."
+    },
+    {
+        type: "mc",
+        question: "Ở vùng núi cao, nấu cơm thường lâu chín hơn đồng bằng vì:",
+        options: ["Nhiệt độ sôi của nước thấp hơn", "Áp suất không khí cao hơn", "Nồng độ oxi thấp hơn", "Gió mạnh hơn"],
+        correct: 0,
+        explanation: "Ở vùng cao, áp suất khí quyển thấp làm nhiệt độ sôi của nước giảm (<100°C), nên cơm lâu chín."
+    },
+    {
+        type: "sa",
+        question: "Biểu thức tính tốc độ trung bình của phản ứng theo biến thiên nồng độ chất sản phẩm C (ΔC) trong khoảng thời gian Δt là: v = ...?",
+        correct: ["delta c / delta t", "dc/dt"],
+        explanation: "v = ΔC / Δt (với chất sản phẩm, nồng độ tăng nên ΔC dương)."
+    },
+    {
+        type: "mc",
+        question: "Yếu tố nào sau đây ảnh hưởng đến tốc độ phản ứng: CaCO₃(s) + 2HCl(aq) → CaCl₂(aq) + CO₂(g) + H₂O(l)?",
+        options: ["Nồng độ HCl", "Kích thước hạt CaCO₃", "Nhiệt độ dung dịch", "Tất cả các yếu tố trên"],
+        correct: 3,
+        explanation: "Nồng độ, diện tích bề mặt (kích thước hạt) và nhiệt độ đều ảnh hưởng."
+    },
+    {
+        type: "tf",
+        question: "Nghiền nhỏ thuốc trước khi uống giúp thuốc có tác dụng nhanh hơn.",
+        correct: true,
+        explanation: "Đúng. Tăng diện tích tiếp xúc giúp thuốc tan và hấp thu nhanh hơn."
+    },
+
+    // CHƯƠNG 7: NGUYÊN TỐ NHÓM HALOGEN (Mở rộng)
+    {
+        type: "mc",
+        question: "Dung dịch HF có tính chất đặc biệt nào?",
+        options: ["Tính axit mạnh nhất", "Ăn mòn thủy tinh", "Có màu xanh lam", "Không tan trong nước"],
+        correct: 1,
+        explanation: "HF tác dụng với SiO₂ trong thủy tinh: SiO₂ + 4HF → SiF₄ + 2H₂O."
+    },
+    {
+        type: "sa",
+        question: "Nguyên tố Halogen nào là chất rắn màu đen tím ở điều kiện thường?",
+        correct: ["iodine", "iot", "i2"],
+        explanation: "Iodine (Iot) là chất rắn màu đen tím."
+    },
+    {
+        type: "mc",
+        question: "Trong y tế, cồn i-ốt (Iodine) được dùng để làm gì?",
+        options: ["Gây mê", "Sát trùng vết thương", "Hạ sốt", "Giảm đau"],
+        correct: 1,
+        explanation: "Dung dịch Iodine 5% trong ethanol dùng để sát trùng."
+    },
+    {
+        type: "mc",
+        question: "Phản ứng: 2Fe + 3Cl₂ → 2FeCl₃. Nếu thay Cl₂ bằng I₂ thì sản phẩm là:",
+        options: ["FeI₃", "FeI₂", "Không phản ứng", "FeI"],
+        correct: 1,
+        explanation: "Iot có tính oxi hóa yếu hơn Clo, chỉ oxi hóa sắt lên sắt (II): Fe + I₂ → FeI₂."
+    },
+    {
+        type: "mc",
+        question: "Clorua vôi là chất bột màu trắng, có tính oxi hóa mạnh dùng để tẩy trắng, sát trùng. Công thức của clorua vôi là:",
+        options: ["CaCl₂", "Ca(OCl)₂", "CaOCl₂", "Ca(ClO₃)₂"],
+        correct: 2,
+        explanation: "CaOCl₂ là công thức của clorua vôi (muối hỗn tạp)."
+    },
+    {
+        type: "tf",
+        question: "Trong nhóm Halogen, đi từ Flo đến Iot, tính oxi hóa giảm dần.",
+        correct: true,
+        explanation: "Đúng. Flo mạnh nhất, Iot yếu nhất."
+    },
+    {
+        type: "mc",
+        question: "Để nhận biết khí Cl₂ (màu vàng lục), người ta dùng giấy tẩm dung dịch nào sau đây để thấy giấy chuyển màu xanh tím?",
+        options: ["KI và hồ tinh bột", "AgNO₃", "Quỳ tím", "NaOH"],
+        correct: 0,
+        explanation: "Cl₂ đẩy Iot ra khỏi KI (Cl₂ + 2KI → 2KCl + I₂). Iot làm hồ tinh bột hóa xanh."
+    },
+    {
+        type: "sa",
+        question: "Axit nào có trong dịch vị dạ dày giúp tiêu hóa thức ăn? (Viết công thức)",
+        correct: ["hcl"],
+        explanation: "Axit Clohidric (HCl)."
+    },
+    {
+        type: "mc",
+        question: "Khi mở nắp bình đựng dung dịch HCl đặc trong không khí ẩm, hiện tượng quan sát được là:",
+        options: ["Có khói trắng bay ra", "Có khí màu vàng lục", "Dung dịch chuyển màu đỏ", "Không có hiện tượng gì"],
+        correct: 0,
+        explanation: "Khí HCl bay ra hút ẩm trong không khí tạo thành các hạt nhỏ dung dịch HCl (sương mù/khói trắng)."
+    },
+    {
+        type: "mc",
+        question: "Muối ăn có công thức hóa học là gì?",
+        options: ["KCl", "NaCl", "MgCl₂", "CaSO₄"],
+        correct: 1,
+        explanation: "NaCl là thành phần chính của muối ăn."
+    },
+    
+    // CÁC CÂU BỔ SUNG KHÁC
+    {
+        type: "mc",
+        question: "Phản ứng nhiệt phân muối Kali pemanganat (KMnO₄) dùng để điều chế khí gì trong phòng thí nghiệm?",
+        options: ["O₂", "H₂", "Cl₂", "N₂"],
+        correct: 0,
+        explanation: "2KMnO₄ → K₂MnO₄ + MnO₂ + O₂ (nhiệt độ)."
+    },
+    {
+        type: "tf",
+        question: "Khí Ozone (O₃) ở tầng bình lưu giúp bảo vệ trái đất khỏi tia cực tím.",
+        correct: true,
+        explanation: "Đúng. Lớp Ozone ngăn chặn tia UV."
+    },
+    {
+        type: "mc",
+        question: "Sự gỉ sắt là quá trình oxi hóa chậm của sắt bởi:",
+        options: ["Oxi không khí và hơi nước", "Khí Nitơ", "Khí CO₂", "Ánh sáng mặt trời"],
+        correct: 0,
+        explanation: "Gỉ sắt là Fe₂O₃.nH₂O, tạo thành do Fe tác dụng với O₂ và H₂O."
+    },
+    {
+        type: "sa",
+        question: "Kim loại lỏng duy nhất ở nhiệt độ thường là gì? (Viết tên tiếng Việt)",
+        correct: ["thủy ngân"],
+        explanation: "Thủy ngân (Hg) là kim loại lỏng."
+    },
+    {
+        type: "mc",
+        question: "Trong phản ứng: SO₂ + 2H₂S → 3S + 2H₂O. Số oxi hóa của S trong sản phẩm là:",
+        options: ["0", "+4", "-2", "+6"],
+        correct: 0,
+        explanation: "Lưu huỳnh đơn chất (S) có số oxi hóa là 0."
+    },
+    {
+        type: "mc",
+        question: "Để dập tắt đám cháy xăng dầu, người ta KHÔNG được dùng:",
+        options: ["Cát", "Chăn ướt", "Nước", "Bình chữa cháy CO₂"],
+        correct: 2,
+        explanation: "Xăng dầu nhẹ hơn nước và không tan trong nước, dùng nước sẽ làm đám cháy lan rộng."
+    },
+    {
+        type: "tf",
+        question: "Vàng (Au) tan được trong axit HCl.",
+        correct: false,
+        explanation: "Sai. Vàng là kim loại rất trơ, chỉ tan trong nước cường toan (hỗn hợp HCl và HNO₃)."
+    },
+    {
+        type: "mc",
+        question: "Số oxi hóa của Hydro trong NaH là:",
+        options: ["+1", "-1", "0", "+2"],
+        correct: 1,
+        explanation: "Trong hiđrua kim loại (NaH, CaH₂...), Hydro có số oxi hóa -1."
+    },
+    {
+        type: "mc",
+        question: "Chất khí nào có mùi trứng thối, rất độc?",
+        options: ["H₂S", "SO₂", "CO₂", "NH₃"],
+        correct: 0,
+        explanation: "H₂S (Hydro sunfua) có mùi trứng thối đặc trưng."
+    },
+    {
+        type: "sa",
+        question: "Công thức hóa học của nước oxi già là gì?",
+        correct: ["h2o2"],
+        explanation: "Hydrogen peroxide."
+    }
+,
+        // --- TIẾP THEO PHẦN 4 (CÂU 151 - 200) ---
+
+    // CHƯƠNG 4: PHẢN ỨNG OXI HÓA - KHỬ (Tiếp)
+    {
+        type: "mc",
+        question: "Trong phản ứng: 2KMnO₄ + 16HCl → 2KCl + 2MnCl₂ + 5Cl₂ + 8H₂O. Số phân tử HCl đóng vai trò chất khử là:",
+        options: ["16", "10", "6", "5"],
+        correct: 1,
+        explanation: "Có 10 nguyên tử Cl⁻ (trong 16 phân tử HCl) chuyển thành 5 phân tử Cl₂ (số oxi hóa thay đổi từ -1 lên 0)."
+    },
+    {
+        type: "sa",
+        question: "Số oxi hóa của Lưu huỳnh (S) trong H₂SO₄ là bao nhiêu? (Nhập số kèm dấu)",
+        correct: ["+6"],
+        explanation: "2(+1) + x + 4(-2) = 0 => 2 + x - 8 = 0 => x = +6."
+    },
+    {
+        type: "tf",
+        question: "Phản ứng phân hủy KClO₃ (có xúc tác MnO₂, nhiệt độ) là phản ứng oxi hóa - khử.",
+        correct: true,
+        explanation: "Đúng. 2KClO₃ → 2KCl + 3O₂. Cl từ +5 xuống -1, O từ -2 lên 0."
+    },
+    {
+        type: "mc",
+        question: "Cho phản ứng: 3Cu + 8HNO₃ (loãng) → 3Cu(NO₃)₂ + 2NO + 4H₂O. Tổng hệ số cân bằng (nguyên tối giản) của phương trình là:",
+        options: ["20", "18", "24", "16"],
+        correct: 0,
+        explanation: "3 + 8 + 3 + 2 + 4 = 20."
+    },
+    {
+        type: "mc",
+        question: "Hợp chất nào sau đây của Nitrogen thể hiện tính khử?",
+        options: ["NH₃", "HNO₃", "N₂O₅", "HNO₂"],
+        correct: 0,
+        explanation: "Trong NH₃, N có số oxi hóa -3 (thấp nhất) nên chỉ có thể tăng (thể hiện tính khử)."
+    },
+    {
+        type: "mc",
+        question: "Dãy chất nào sau đây đều có tính oxi hóa?",
+        options: ["Cl₂, O₂, KMnO₄, HNO₃", "Na, Mg, Al, H₂", "H₂S, NH₃, KI, Fe", "C, S, FeO, CO"],
+        correct: 0,
+        explanation: "Các chất trong đáp án A đều là các chất oxi hóa mạnh điển hình."
+    },
+
+    // CHƯƠNG 5: NĂNG LƯỢNG HÓA HỌC (Tiếp)
+    {
+        type: "mc",
+        question: "Cho phản ứng trung hòa: HCl(aq) + NaOH(aq) → NaCl(aq) + H₂O(l) có ΔrH = -57.3 kJ. Phát biểu nào ĐÚNG?",
+        options: ["Phản ứng thu nhiệt", "Nhiệt lượng tỏa ra là 57.3 kJ khi 1 mol HCl phản ứng", "Nhiệt lượng hệ hấp thụ là 57.3 kJ", "Cần cung cấp nhiệt để phản ứng xảy ra"],
+        correct: 1,
+        explanation: "ΔrH âm là phản ứng tỏa nhiệt. Lượng nhiệt tỏa ra là 57.3 kJ."
+    },
+    {
+        type: "sa",
+        question: "Nhiệt tạo thành chuẩn của O₂ (khí) là bao nhiêu kJ/mol?",
+        correct: ["0"],
+        explanation: "Nhiệt tạo thành của đơn chất bền ở điều kiện chuẩn bằng 0."
+    },
+    {
+        type: "mc",
+        question: "Biến thiên enthalpy của phản ứng 2NO(g) + O₂(g) → 2NO₂(g) tính theo nhiệt tạo thành (ΔfH) là:",
+        options: ["2ΔfH(NO₂) - 2ΔfH(NO)", "2ΔfH(NO) - 2ΔfH(NO₂)", "ΔfH(NO₂) - ΔfH(NO)", "2ΔfH(NO₂) + 2ΔfH(NO)"],
+        correct: 0,
+        explanation: "ΔrH = ∑ΔfH(sản phẩm) - ∑ΔfH(chất đầu) = [2ΔfH(NO₂)] - [2ΔfH(NO) + 0]."
+    },
+    {
+        type: "tf",
+        question: "Phản ứng chuyển hóa Phosphorus đỏ thành Phosphorus trắng có ΔrH = +17.6 kJ. Vậy P đỏ bền hơn P trắng.",
+        correct: true,
+        explanation: "Đúng. Phản ứng thu nhiệt nghĩa là P trắng có năng lượng cao hơn P đỏ => P đỏ bền vững hơn."
+    },
+    {
+        type: "mc",
+        question: "Phản ứng quang hợp của cây xanh: 6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂. Đây là phản ứng:",
+        options: ["Thu năng lượng (ánh sáng)", "Tỏa nhiệt mạnh", "Tự xảy ra trong bóng tối", "Phản ứng trung hòa"],
+        correct: 0,
+        explanation: "Quang hợp cần hấp thụ năng lượng ánh sáng mặt trời để tổng hợp chất hữu cơ (thu năng lượng)."
+    },
+    {
+        type: "mc",
+        question: "Đốt cháy hoàn toàn 1 mol C₂H₅OH tỏa ra 1367 kJ. Phương trình nhiệt hóa học nào đúng?",
+        options: ["C₂H₅OH + 3O₂ → 2CO₂ + 3H₂O ΔrH = -1367 kJ", "C₂H₅OH + 3O₂ → 2CO₂ + 3H₂O ΔrH = +1367 kJ", "C₂H₅OH + 3O₂ → 2CO₂ + 3H₂O ΔrH = 1367 kJ", "2C₂H₅OH + 6O₂ → 4CO₂ + 6H₂O ΔrH = -1367 kJ"],
+        correct: 0,
+        explanation: "Tỏa nhiệt thì ΔrH âm."
+    },
+    {
+        type: "sa",
+        question: "Để tính nhiệt phản ứng, nếu biết năng lượng liên kết (Eb), ta lấy Tổng Eb chất đầu ... Tổng Eb sản phẩm. (Điền dấu + hoặc -)",
+        correct: ["-", "trừ"],
+        explanation: "Công thức: ΔrH = ∑Eb(cđ) - ∑Eb(sp)."
+    },
+
+    // CHƯƠNG 6: TỐC ĐỘ PHẢN ỨNG (Tiếp)
+    {
+        type: "mc",
+        question: "Xét phản ứng phân hủy: 2H₂O₂ → 2H₂O + O₂. Tốc độ phản ứng xác định bằng:",
+        options: ["Độ giảm nồng độ H₂O₂ theo thời gian", "Độ tăng nồng độ H₂O₂ theo thời gian", "Lượng nước tạo thành", "Áp suất khí quyển"],
+        correct: 0,
+        explanation: "H₂O₂ là chất tham gia nên nồng độ giảm dần."
+    },
+    {
+        type: "mc",
+        question: "Cho phản ứng 2NO(g) + O₂(g) → 2NO₂(g). Nếu tăng nồng độ NO lên 3 lần (O₂ giữ nguyên) thì tốc độ phản ứng tăng:",
+        options: ["3 lần", "6 lần", "9 lần", "27 lần"],
+        correct: 2,
+        explanation: "v = k.[NO]².[O₂]. Nếu [NO] tăng 3 thì v tăng 3² = 9 lần."
+    },
+    {
+        type: "tf",
+        question: "Chất xúc tác làm thay đổi cân bằng của phản ứng thuận nghịch.",
+        correct: false,
+        explanation: "Sai. Chất xúc tác làm tăng tốc độ phản ứng thuận và nghịch như nhau, giúp đạt cân bằng nhanh hơn chứ không làm chuyển dịch cân bằng."
+    },
+    {
+        type: "mc",
+        question: "Khi cho kẽm hạt vào dung dịch H₂SO₄ loãng. Biện pháp nào KHÔNG làm tăng tốc độ thoát khí H₂?",
+        options: ["Đun nóng dung dịch", "Thêm nước vào dung dịch", "Nghiền nhỏ hạt kẽm", "Thêm vài giọt CuSO₄"],
+        correct: 1,
+        explanation: "Thêm nước làm loãng axit (giảm nồng độ), do đó làm GIẢM tốc độ phản ứng. (Thêm CuSO₄ tạo pin điện hóa làm tăng tốc độ ăn mòn)."
+    },
+    {
+        type: "mc",
+        question: "Tủ lạnh bảo quản thức ăn dựa trên nguyên tắc:",
+        options: ["Giảm nhiệt độ để giảm tốc độ phản ứng", "Tăng áp suất để ức chế vi khuẩn", "Loại bỏ oxi", "Dùng chất xúc tác lạnh"],
+        correct: 0,
+        explanation: "Hạ nhiệt độ làm giảm tốc độ các phản ứng sinh hóa gây hư hỏng thực phẩm."
+    },
+    {
+        type: "sa",
+        question: "Trong biểu thức v = k.Ca.Cb, k được gọi là gì?",
+        correct: ["hằng số tốc độ", "hằng số tốc độ phản ứng"],
+        explanation: "k là hằng số tốc độ, phụ thuộc vào nhiệt độ và bản chất phản ứng."
+    },
+    {
+        type: "mc",
+        question: "Phản ứng của H₂ và I₂ là phản ứng thuận nghịch. Khi nhiệt độ tăng, tốc độ phản ứng thuận và nghịch đều:",
+        options: ["Tăng", "Giảm", "Thuận tăng, nghịch giảm", "Thuận giảm, nghịch tăng"],
+        correct: 0,
+        explanation: "Nhiệt độ tăng luôn làm tăng tốc độ phản ứng (cả thuận và nghịch)."
+    },
+    {
+        type: "mc",
+        question: "Men rượu (enzyme) giúp chuyển hóa tinh bột thành ancol etylic. Đây là ví dụ của:",
+        options: ["Xúc tác đồng thể", "Xúc tác dị thể", "Xúc tác sinh học", "Chất ức chế"],
+        correct: 2,
+        explanation: "Enzyme là xúc tác sinh học đặc hiệu."
+    },
+
+    // CHƯƠNG 7: NGUYÊN TỐ NHÓM HALOGEN (Tiếp)
+    {
+        type: "mc",
+        question: "Liên kết trong phân tử Hydrogen halide (HX) là liên kết:",
+        options: ["Cộng hóa trị phân cực", "Cộng hóa trị không phân cực", "Ion", "Kim loại"],
+        correct: 0,
+        explanation: "Do độ âm điện của Halogen lớn hơn Hydro nên cặp e dùng chung lệch về phía Halogen => Phân cực."
+    },
+    {
+        type: "mc",
+        question: "Dung dịch nào sau đây làm quỳ tím hóa đỏ?",
+        options: ["NaCl", "HBr", "NaOH", "KI"],
+        correct: 1,
+        explanation: "HBr là axit mạnh."
+    },
+    {
+        type: "sa",
+        question: "Nguyên tố nào trong nhóm Halogen có độ âm điện lớn nhất?",
+        correct: ["fluorine", "f", "flo"],
+        explanation: "Fluorine (3.98) có độ âm điện lớn nhất bảng tuần hoàn."
+    },
+    {
+        type: "mc",
+        question: "Phản ứng nào sau đây KHÔNG xảy ra?",
+        options: ["F₂ + H₂O", "Cl₂ + NaBr", "I₂ + NaBr", "Br₂ + NaI"],
+        correct: 2,
+        explanation: "Iodine có tính oxi hóa yếu hơn Bromine nên không thể đẩy Bromine ra khỏi muối NaBr."
+    },
+    {
+        type: "tf",
+        question: "Dung dịch HF là axit yếu nhưng có tính chất đặc biệt là ăn mòn thủy tinh.",
+        correct: true,
+        explanation: "Đúng. HF + SiO₂ → SiF₄ + H₂O."
+    },
+    {
+        type: "mc",
+        question: "Muối Iod (dùng phòng bướu cổ) thực chất là muối ăn trộn với một lượng nhỏ:",
+        options: ["I₂", "KI hoặc KIO₃", "HI", "AgI"],
+        correct: 1,
+        explanation: "Trộn KI hoặc KIO₃ (bền hơn I₂) vào muối NaCl."
+    },
+    {
+        type: "mc",
+        question: "Khi sục khí Cl₂ vào dung dịch NaOH ở nhiệt độ thường, ta thu được dung dịch chứa:",
+        options: ["NaCl, NaClO", "NaCl, NaClO₃", "HCl, HClO", "Chỉ NaCl"],
+        correct: 0,
+        explanation: "Cl₂ + 2NaOH → NaCl + NaClO + H₂O (Nước Javel)."
+    },
+    {
+        type: "mc",
+        question: "Đơn chất Halogen nào có màu vàng lục?",
+        options: ["F₂", "Cl₂", "Br₂", "I₂"],
+        correct: 1,
+        explanation: "Flo: lục nhạt, Clo: vàng lục, Brom: nâu đỏ, Iot: đen tím."
+    },
+
+    // CÂU HỎI TỔNG HỢP & THỰC TẾ
+    {
+        type: "mc",
+        question: "Trong công nghiệp, khí Clo được điều chế bằng cách:",
+        options: ["Điện phân dung dịch NaCl bão hòa có màng ngăn", "Điện phân dung dịch NaCl không màng ngăn", "Cho MnO₂ tác dụng HCl", "Cho KMnO₄ tác dụng HCl"],
+        correct: 0,
+        explanation: "Điện phân có màng ngăn: 2NaCl + 2H₂O → 2NaOH + H₂ + Cl₂."
+    },
+    {
+        type: "sa",
+        question: "Khí nào được dùng để khử trùng nước sinh hoạt? (Viết tên hoặc công thức)",
+        correct: ["clo", "cl2", "chlorine"],
+        explanation: "Chlorine có tính oxi hóa mạnh, diệt khuẩn tốt."
+    },
+    {
+        type: "mc",
+        question: "Phản ứng nhiệt phân muối nào sau đây dùng để điều chế Oxi trong phòng thí nghiệm?",
+        options: ["CaCO₃", "KMnO₄", "NaHCO₃", "NH₄Cl"],
+        correct: 1,
+        explanation: "2KMnO₄ → K₂MnO₄ + MnO₂ + O₂."
+    },
+    {
+        type: "tf",
+        question: "Tất cả các phản ứng cháy đều là phản ứng tỏa nhiệt.",
+        correct: true,
+        explanation: "Đúng. Phản ứng cháy luôn giải phóng năng lượng dưới dạng nhiệt và ánh sáng."
+    },
+    {
+        type: "mc",
+        question: "Kim loại nào sau đây thụ động hóa (không tác dụng) với HNO₃ đặc nguội và H₂SO₄ đặc nguội?",
+        options: ["Cu, Ag", "Mg, Zn", "Fe, Al", "Na, K"],
+        correct: 2,
+        explanation: "Fe, Al, Cr bị thụ động hóa trong axit đặc nguội."
+    },
+    {
+        type: "mc",
+        question: "Số oxi hóa của S trong SO₂ là:",
+        options: ["+2", "+4", "+6", "-2"],
+        correct: 1,
+        explanation: "x + 2(-2) = 0 => x = +4."
+    },
+    {
+        type: "sa",
+        question: "Chất khí sinh ra khi cho Fe tác dụng với dung dịch HCl là gì?",
+        correct: ["h2", "hidro", "hydrogen"],
+        explanation: "Fe + 2HCl → FeCl₂ + H₂."
+    },
+    {
+        type: "mc",
+        question: "Để đánh giá mức độ xảy ra nhanh hay chậm của các phản ứng hóa học, người ta dùng đại lượng:",
+        options: ["Tốc độ phản ứng", "Cân bằng hóa học", "Hiệu suất phản ứng", "Biến thiên enthalpy"],
+        correct: 0,
+        explanation: "Định nghĩa tốc độ phản ứng."
+    },
+    {
+        type: "mc",
+        question: "Phản ứng nào sau đây là phản ứng thuận nghịch?",
+        options: ["N₂ + 3H₂ ⇌ 2NH₃", "2H₂ + O₂ → 2H₂O", "Zn + 2HCl → ZnCl₂ + H₂", "NaOH + HCl → NaCl + H₂O"],
+        correct: 0,
+        explanation: "Tổng hợp NH₃ là phản ứng thuận nghịch điển hình."
+    },
+    {
+        type: "tf",
+        question: "Ozone (O₃) có tính oxi hóa mạnh hơn Oxi (O₂).",
+        correct: true,
+        explanation: "Đúng. O₃ oxi hóa được Ag ở nhiệt độ thường, O₂ thì không."
+    },
+    {
+        type: "mc",
+        question: "Khí HCl khô khi gặp quỳ tím ẩm thì quỳ tím sẽ:",
+        options: ["Không đổi màu", "Hóa xanh", "Hóa đỏ", "Mất màu"],
+        correct: 2,
+        explanation: "HCl tan vào nước trong quỳ tím ẩm tạo axit HCl, làm quỳ hóa đỏ."
+    },
+    {
+        type: "sa",
+        question: "Liên kết trong phân tử NaCl là liên kết gì? (Ion/Cộng hóa trị)",
+        correct: ["ion", "liên kết ion"],
+        explanation: "Liên kết giữa kim loại điển hình (Na) và phi kim điển hình (Cl)."
+    },
+    {
+        type: "mc",
+        question: "Trong dãy các acid HX (X: F, Cl, Br, I), acid nào mạnh nhất?",
+        options: ["HF", "HCl", "HBr", "HI"],
+        correct: 3,
+        explanation: "Tính axit tăng dần từ HF < HCl < HBr < HI do độ bền liên kết giảm dần."
+    },
+    {
+        type: "mc",
+        question: "Hợp chất nào sau đây có liên kết cộng hóa trị không phân cực?",
+        options: ["HCl", "NaCl", "Cl₂", "H₂O"],
+        correct: 2,
+        explanation: "Cl-Cl: Hai nguyên tử giống nhau, hiệu độ âm điện = 0."
+    }
+,
+        // --- TIẾP THEO PHẦN 5 (CÂU 201 - 250) ---
+
+    // CHƯƠNG 6: TỐC ĐỘ PHẢN ỨNG (Nâng cao & Đồ thị)
+    {
+        type: "mc",
+        question: "Trên đồ thị biểu diễn biến thiên enthalpy của phản ứng, nếu năng lượng của chất tham gia cao hơn năng lượng của sản phẩm thì phản ứng đó là:",
+        options: ["Tỏa nhiệt", "Thu nhiệt", "Không xác định", "Cân bằng"],
+        correct: 0,
+        explanation: "Năng lượng đầu > Năng lượng cuối => Hệ đã giải phóng năng lượng (Tỏa nhiệt)."
+    },
+    {
+        type: "sa",
+        question: "Để tăng tốc độ phản ứng nung vôi: CaCO₃ → CaO + CO₂, biện pháp quan trọng nhất là tăng yếu tố nào?",
+        correct: ["nhiệt độ", "nhiệt"],
+        explanation: "Phản ứng nhiệt phân CaCO₃ là phản ứng thu nhiệt mạnh, cần nhiệt độ cao (khoảng 900-1000°C)."
+    },
+    {
+        type: "mc",
+        question: "Cho phản ứng A(g) + B(g) → C(g). Nếu tăng áp suất của hệ lên 2 lần thì tốc độ phản ứng tăng bao nhiêu lần? (Biết v = k.[A].[B])",
+        options: ["2 lần", "4 lần", "8 lần", "Không đổi"],
+        correct: 1,
+        explanation: "Tăng áp suất 2 lần => Nồng độ A tăng 2, nồng độ B tăng 2. v' = k.(2A).(2B) = 4.k.A.B = 4v."
+    },
+    {
+        type: "tf",
+        question: "Hằng số tốc độ k phụ thuộc vào nồng độ của chất tham gia phản ứng.",
+        correct: false,
+        explanation: "Sai. Hằng số tốc độ k chỉ phụ thuộc vào bản chất chất phản ứng và nhiệt độ (và xúc tác), không phụ thuộc nồng độ."
+    },
+    {
+        type: "mc",
+        question: "Chất xúc tác làm tăng tốc độ phản ứng bằng cách:",
+        options: ["Tăng nhiệt độ của hệ", "Tăng nồng độ chất tham gia", "Giảm năng lượng hoạt hóa của phản ứng", "Làm dịch chuyển cân bằng"],
+        correct: 2,
+        explanation: "Cơ chế của xúc tác là tạo ra một con đường phản ứng mới có năng lượng hoạt hóa thấp hơn."
+    },
+    {
+        type: "mc",
+        question: "Đơn vị của hằng số tốc độ k trong biểu thức v = k.[A] (phản ứng bậc 1) là:",
+        options: ["s⁻¹", "mol/(L.s)", "L/(mol.s)", "L²/(mol².s)"],
+        correct: 0,
+        explanation: "v (mol/L.s) = k * [A] (mol/L) => k có đơn vị là 1/s hay s⁻¹."
+    },
+    {
+        type: "sa",
+        question: "Hiện tượng sắt bị gỉ nhanh hơn trong không khí ẩm so với không khí khô là do yếu tố nào?",
+        correct: ["xúc tác", "hơi nước", "nước"],
+        explanation: "Hơi nước đóng vai trò môi trường/xúc tác cho quá trình ăn mòn điện hóa học."
+    },
+    {
+        type: "mc",
+        question: "Khi nhiệt độ tăng thêm 10°C, tốc độ phản ứng tăng 2 lần. Nếu đun nóng từ 30°C lên 60°C thì tốc độ phản ứng tăng:",
+        options: ["4 lần", "6 lần", "8 lần", "16 lần"],
+        correct: 2,
+        explanation: "ΔT = 30°C (3 khoảng 10 độ). Tăng = 2³ = 8 lần."
+    },
+    {
+        type: "mc",
+        question: "Trong phản ứng tự xúc tác, chất xúc tác là:",
+        options: ["Một trong các chất tham gia", "Một trong các sản phẩm tạo thành", "Ánh sáng", "Nhiệt độ"],
+        correct: 1,
+        explanation: "Sản phẩm sinh ra quay lại đóng vai trò xúc tác cho phản ứng (Ví dụ: Mn²⁺ trong phản ứng oxi hóa H₂C₂O₄ bằng KMnO₄)."
+    },
+    {
+        type: "tf",
+        question: "Chia nhỏ viên than đá sẽ làm giảm tốc độ cháy của than.",
+        correct: false,
+        explanation: "Sai. Chia nhỏ làm tăng diện tích bề mặt tiếp xúc => Tăng tốc độ cháy."
+    },
+
+    // CHƯƠNG 7: NGUYÊN TỐ NHÓM HALOGEN (Tính chất & Ứng dụng)
+    {
+        type: "mc",
+        question: "Nguyên tố Halogen nào được dùng để sản xuất nhựa Teflon (chất chống dính)?",
+        options: ["Clo", "Flo", "Brom", "Iot"],
+        correct: 1,
+        explanation: "Teflon là Politetrafloetylen (-CF₂-CF₂-)n."
+    },
+    {
+        type: "mc",
+        question: "Phản ứng nào sau đây dùng để khắc phục sự cố rò rỉ khí Cl₂ trong phòng thí nghiệm?",
+        options: ["Phun nước vào", "Phun khí NH₃", "Phun khí O₂", "Phun dung dịch NaCl"],
+        correct: 1,
+        explanation: "NH₃ phản ứng với Cl₂ tạo NH₄Cl (khói trắng) và N₂, giúp loại bỏ Cl₂ độc hại: 8NH₃ + 3Cl₂ → 6NH₄Cl + N₂."
+    },
+    {
+        type: "sa",
+        question: "Axit nào yếu hơn axit Carbonic (H₂CO₃) nhưng lại ăn mòn được thủy tinh?",
+        correct: ["hf", "axit flohidric"],
+        explanation: "HF là axit yếu nhưng có ái lực mạnh với Si."
+    },
+    {
+        type: "mc",
+        question: "Trong công nghiệp, Brom (Br₂) được điều chế từ:",
+        options: ["Nước biển", "Rong biển", "Quặng pirit", "Không khí"],
+        correct: 0,
+        explanation: "Dùng Cl₂ để oxi hóa ion Br⁻ trong nước biển: Cl₂ + 2NaBr → 2NaCl + Br₂."
+    },
+    {
+        type: "mc",
+        question: "Hỗn hợp khí nào sau đây có thể tồn tại ở bất kỳ điều kiện nào (không phản ứng)?",
+        options: ["H₂ và F₂", "Cl₂ và O₂", "H₂ và Cl₂ (ánh sáng)", "NH₃ và Cl₂"],
+        correct: 1,
+        explanation: "Clo không tác dụng trực tiếp với Oxi."
+    },
+    {
+        type: "tf",
+        question: "Tính axit của các dung dịch HX tăng dần từ HI < HBr < HCl < HF.",
+        correct: false,
+        explanation: "Sai. Tính axit tăng dần từ HF (yếu nhất) đến HI (mạnh nhất)."
+    },
+    {
+        type: "mc",
+        question: "Khi đổ dung dịch AgNO₃ vào dung dịch NaF, hiện tượng là:",
+        options: ["Kết tủa trắng", "Kết tủa vàng nhạt", "Kết tủa vàng đậm", "Không có hiện tượng"],
+        correct: 3,
+        explanation: "AgF là muối tan, không tạo kết tủa."
+    },
+    {
+        type: "mc",
+        question: "Cloramin B là chất sát khuẩn phổ biến. Thành phần của nó chứa nguyên tố halogen nào?",
+        options: ["Flo", "Clo", "Brom", "Iot"],
+        correct: 1,
+        explanation: "Cloramin B (C₆H₅SO₂NClNa) chứa Clo dương (+1) có tính oxi hóa mạnh."
+    },
+    {
+        type: "sa",
+        question: "Hợp chất KClO₃ có tên gọi là gì? (Viết tiếng Việt: Kali ...)",
+        correct: ["kali clorat", "kali chlorate"],
+        explanation: "KClO₃ là muối Kali clorat."
+    },
+    {
+        type: "mc",
+        question: "Trong dãy F₂, Cl₂, Br₂, I₂, nhiệt độ sôi biến đổi như thế nào?",
+        options: ["Tăng dần", "Giảm dần", "Không đổi", "Tăng rồi giảm"],
+        correct: 0,
+        explanation: "Từ F₂ đến I₂: Khối lượng phân tử tăng, tương tác van der Waals tăng => Nhiệt độ sôi tăng."
+    },
+
+    // CHƯƠNG 4 & 5: OXI HÓA KHỬ - NĂNG LƯỢNG (Bài tập tổng hợp)
+    {
+        type: "mc",
+        question: "Phản ứng nhiệt phân: 2KMnO₄ → K₂MnO₄ + MnO₂ + O₂. Tổng hệ số cân bằng là:",
+        options: ["4", "5", "6", "7"],
+        correct: 1,
+        explanation: "2 + 1 + 1 + 1 = 5."
+    },
+    {
+        type: "mc",
+        question: "Cho phản ứng: C₂H₄ + H₂ → C₂H₆. Đây là phản ứng:",
+        options: ["Oxi hóa - khử", "Trao đổi", "Thế", "Phân hủy"],
+        correct: 0,
+        explanation: "C thay đổi số oxi hóa từ -2 (C₂H₄) xuống -3 (C₂H₆)."
+    },
+    {
+        type: "mc",
+        question: "Giá trị ΔfHº₂₉₈ của H₂O(l) là -285.8 kJ/mol, của H₂O(g) là -241.8 kJ/mol. Quá trình bay hơi của nước là:",
+        options: ["Tỏa nhiệt", "Thu nhiệt", "Không trao đổi nhiệt", "Không xác định"],
+        correct: 1,
+        explanation: "ΔrH = ΔfH(hơi) - ΔfH(lỏng) = -241.8 - (-285.8) = +44 kJ (Thu nhiệt)."
+    },
+    {
+        type: "sa",
+        question: "Trong phản ứng Zn + CuSO₄ → ZnSO₄ + Cu. Chất nào bị oxi hóa? (Viết công thức)",
+        correct: ["zn", "kẽm"],
+        explanation: "Zn nhường e (tăng số oxi hóa) nên Zn bị oxi hóa."
+    },
+    {
+        type: "mc",
+        question: "Ứng dụng nào sau đây KHÔNG phải của H₂O₂?",
+        options: ["Sát trùng vết thương", "Tẩy trắng giấy, bột giấy", "Làm nhiên liệu tên lửa", "Làm muối ăn"],
+        correct: 3,
+        explanation: "H₂O₂ không dùng làm muối ăn. Nó là chất oxi hóa mạnh."
+    },
+    {
+        type: "mc",
+        question: "Nguyên tố nào trong bảng tuần hoàn có độ âm điện lớn thứ 2 (sau Flo)?",
+        options: ["Clo", "Oxi", "Nitơ", "Brom"],
+        correct: 1,
+        explanation: "Oxi (3.44) đứng thứ 2 sau Flo (3.98)."
+    },
+    {
+        type: "tf",
+        question: "Năng lượng liên kết càng lớn thì liên kết càng kém bền.",
+        correct: false,
+        explanation: "Sai. Năng lượng liên kết càng lớn thì cần càng nhiều năng lượng để phá vỡ => Liên kết càng bền."
+    },
+    {
+        type: "mc",
+        question: "Phản ứng nào sau đây là phản ứng oxi hóa - khử nội phân tử?",
+        options: ["2KClO₃ → 2KCl + 3O₂", "Fe + 2HCl → FeCl₂ + H₂", "2H₂ + O₂ → 2H₂O", "Cl₂ + 2NaOH → NaCl + NaClO + H₂O"],
+        correct: 0,
+        explanation: "Trong KClO₃, Cl là chất oxi hóa (+5), O là chất khử (-2) cùng nằm trong 1 phân tử."
+    },
+    {
+        type: "mc",
+        question: "Trong pin điện hóa Zn-Cu, dòng electron di chuyển từ:",
+        options: ["Cực dương sang cực âm", "Cực Zn sang cực Cu", "Cực Cu sang cực Zn", "Dung dịch này sang dung dịch kia"],
+        correct: 1,
+        explanation: "Electron đi từ cực âm (Zn - nơi xảy ra oxi hóa) sang cực dương (Cu)."
+    },
+    {
+        type: "sa",
+        question: "Số oxi hóa của Lưu huỳnh trong H₂S là bao nhiêu? (Nhập số kèm dấu)",
+        correct: ["-2"],
+        explanation: "H là +1 => 2(+1) + x = 0 => x = -2."
+    },
+
+    // CÂU HỎI THỰC TẾ & MÔI TRƯỜNG
+    {
+        type: "mc",
+        question: "Tại sao không dùng bình thủy tinh để đựng dung dịch HF?",
+        options: ["Vì HF là axit mạnh", "Vì HF ăn mòn thủy tinh", "Vì HF dễ bay hơi", "Vì HF có màu"],
+        correct: 1,
+        explanation: "HF phản ứng với SiO₂ (thành phần chính của thủy tinh)."
+    },
+    {
+        type: "mc",
+        question: "Khí thải nào sau đây gây ra hiện tượng mưa axit?",
+        options: ["SO₂ và NO₂", "CO₂ và CH₄", "NH₃ và H₂", "O₂ và N₂"],
+        correct: 0,
+        explanation: "SO₂ và NO₂ tác dụng với nước mưa tạo axit H₂SO₄ và HNO₃."
+    },
+    {
+        type: "tf",
+        question: "Clo được dùng để tiệt trùng nước bể bơi.",
+        correct: true,
+        explanation: "Đúng. Clo hoặc các hợp chất của Clo (như Ca(OCl)₂) có tính oxi hóa mạnh diệt vi khuẩn."
+    },
+    {
+        type: "mc",
+        question: "Thiếu Iot trong cơ thể sẽ dẫn đến bệnh gì?",
+        options: ["Còi xương", "Thiếu máu", "Bướu cổ", "Quáng gà"],
+        correct: 2,
+        explanation: "Iot cần thiết cho tuyến giáp tổng hợp hormone thyroxin."
+    },
+    {
+        type: "sa",
+        question: "Ozone (O₃) có tính chất gì đặc trưng so với Oxi (O₂)? (Tính khử/Tính oxi hóa mạnh hơn)",
+        correct: ["tính oxi hóa", "tính oxi hóa mạnh hơn"],
+        explanation: "Ozone có tính oxi hóa mạnh hơn Oxi rất nhiều."
+    },
+    {
+        type: "mc",
+        question: "Khi bị dây axit H₂SO₄ đặc vào tay, việc đầu tiên cần làm là:",
+        options: ["Rửa ngay bằng nước sạch nhiều lần", "Rửa bằng dung dịch NaOH", "Băng bó ngay", "Bôi dầu mỡ"],
+        correct: 0,
+        explanation: "Cần rửa ngay dưới vòi nước chảy để làm loãng và trôi axit, không dùng bazơ mạnh để trung hòa vì tỏa nhiệt gây bỏng thêm."
+    },
+    {
+        type: "mc",
+        question: "Nguyên tắc dập tắt đám cháy thông thường là:",
+        options: ["Hạ nhiệt độ và cách ly chất cháy với oxi", "Tăng nhiệt độ", "Thổi gió mạnh vào", "Thêm chất xúc tác"],
+        correct: 0,
+        explanation: "Nguyên tắc: Loại bỏ 1 trong 3 yếu tố của sự cháy (Chất cháy, Oxi, Nhiệt độ)."
+    },
+    {
+        type: "mc",
+        question: "Nhiên liệu Hydrogen (H₂) được coi là nhiên liệu sạch vì:",
+        options: ["Sản phẩm cháy chỉ là nước", "Dễ khai thác", "Giá thành rẻ", "Không cháy nổ"],
+        correct: 0,
+        explanation: "2H₂ + O₂ → 2H₂O. Không tạo khí CO₂ gây hiệu ứng nhà kính."
+    },
+    {
+        type: "tf",
+        question: "Vàng tây (hợp kim Au-Cu) cứng hơn vàng nguyên chất.",
+        correct: true,
+        explanation: "Đúng. Hợp kim thường cứng hơn kim loại nguyên chất."
+    },
+    {
+        type: "mc",
+        question: "Trong các Halogen, nguyên tố nào có bán kính nguyên tử nhỏ nhất?",
+        options: ["F", "Cl", "Br", "I"],
+        correct: 0,
+        explanation: "Bán kính nguyên tử tăng dần từ trên xuống dưới trong nhóm: F < Cl < Br < I."
+    },
+
+    // CÂU HỎI VUI & KIẾN THỨC BÊN LỀ
+    {
+        type: "mc",
+        question: "Mùi đặc trưng của nước bể bơi chủ yếu là do:",
+        options: ["Clo dư và các cloramin", "Khí Oxi", "Muối ăn", "Rong rêu"],
+        correct: 0,
+        explanation: "Do sử dụng Clo hoặc hợp chất Clo để khử trùng."
+    },
+    {
+        type: "sa",
+        question: "Kim loại nào dẫn điện tốt nhất? (Viết tên)",
+        correct: ["bạc", "ag"],
+        explanation: "Bạc (Ag) là kim loại dẫn điện tốt nhất."
+    },
+    {
+        type: "mc",
+        question: "Để bảo quản kim loại Natri, người ta ngâm nó trong:",
+        options: ["Nước", "Dầu hỏa", "Rượu", "Axit"],
+        correct: 1,
+        explanation: "Na phản ứng mạnh với nước, rượu, axit và bị oxi hóa trong không khí. Dầu hỏa ngăn cách Na với các tác nhân này."
+    },
+    {
+        type: "mc",
+        question: "Khi điện phân dung dịch NaCl không có màng ngăn, sản phẩm chính thu được là:",
+        options: ["NaOH, H₂, Cl₂", "Nước Javel, H₂", "Na, Cl₂", "HCl, O₂"],
+        correct: 1,
+        explanation: "Cl₂ sinh ra phản ứng ngay với NaOH tạo nước Javel (NaCl + NaClO)."
+    },
+    {
+        type: "tf",
+        question: "Kim cương và than chì đều được cấu tạo từ nguyên tố Carbon.",
+        correct: true,
+        explanation: "Đúng. Chúng là các dạng thù hình của Carbon."
+    },
+    {
+        type: "mc",
+        question: "Số oxi hóa của Fe trong Fe₃O₄ được coi là:",
+        options: ["+2", "+3", "+8/3", "+4"],
+        correct: 2,
+        explanation: "Fe₃O₄ là hỗn hợp của FeO và Fe₂O₃, số oxi hóa trung bình là +8/3."
+    },
+    {
+        type: "mc",
+        question: "Halogen nào có hàm lượng lớn nhất trong vỏ trái đất?",
+        options: ["Flo", "Clo", "Brom", "Iot"],
+        correct: 1,
+        explanation: "Clo là halogen phổ biến nhất (chủ yếu trong muối mỏ, nước biển)."
+    },
+    {
+        type: "sa",
+        question: "Dung dịch axit nào làm than hóa (đen) đường kính, giấy, vải? (Viết công thức)",
+        correct: ["h2so4", "h2so4 đặc", "h2so4 dac"],
+        explanation: "H₂SO₄ đặc có tính háo nước mạnh, lấy nước từ hợp chất hữu cơ để lại than (Carbon)."
+    },
+    {
+        type: "mc",
+        question: "Trong phản ứng hóa học, tốc độ phản ứng được xác định bằng thực nghiệm hay lý thuyết?",
+        options: ["Chỉ thực nghiệm", "Chỉ lý thuyết", "Cả hai", "Đoán mò"],
+        correct: 0,
+        explanation: "Tốc độ phản ứng (và hằng số k, bậc phản ứng) phải được xác định bằng thực nghiệm."
+    },
+    {
+        type: "mc",
+        question: "Yếu tố nào KHÔNG ảnh hưởng đến cân bằng hóa học?",
+        options: ["Nồng độ", "Nhiệt độ", "Áp suất", "Chất xúc tác"],
+        correct: 3,
+        explanation: "Chất xúc tác chỉ làm phản ứng nhanh đạt tới trạng thái cân bằng, không làm chuyển dịch cân bằng."
+    }
+,
+// --- TIẾP THEO PHẦN 6 (CÂU 251 - 300) ---
+
+    // CHƯƠNG 7: NGUYÊN TỐ NHÓM HALOGEN (Nâng cao & Tổng hợp)
+    {
+        type: "mc",
+        question: "Ion Halide nào sau đây có tính khử mạnh nhất?",
+        options: ["F⁻", "Cl⁻", "Br⁻", "I⁻"],
+        correct: 3,
+        explanation: "Tính khử của các ion halide tăng dần từ F⁻ < Cl⁻ < Br⁻ < I⁻. I⁻ dễ nhường electron nhất."
+    },
+    {
+        type: "sa",
+        question: "Tên gọi của hợp chất NaClO (thành phần chính của nước Javel) là gì? (Viết tiếng Việt)",
+        correct: ["natri hypoclorit", "natri hypochlorit"],
+        explanation: "Muối của axit hipoclorơ (HClO)."
+    },
+    {
+        type: "tf",
+        question: "Flo là phi kim mạnh nhất trong bảng tuần hoàn.",
+        correct: true,
+        explanation: "Đúng. Flo có độ âm điện lớn nhất (3.98) và tính oxi hóa mạnh nhất."
+    },
+    {
+        type: "mc",
+        question: "Khi sục khí Cl₂ dư vào dung dịch KBr, hiện tượng quan sát được là:",
+        options: ["Dung dịch chuyển sang màu vàng nâu", "Có kết tủa trắng", "Có khí thoát ra", "Dung dịch mất màu"],
+        correct: 0,
+        explanation: "Cl₂ + 2KBr → 2KCl + Br₂. Brom sinh ra tan trong nước tạo màu vàng nâu."
+    },
+    {
+        type: "mc",
+        question: "Phản ứng hóa học: SiO₂ + 4HF → SiF₄ + 2H₂O được ứng dụng để:",
+        options: ["Sản xuất thủy tinh", "Khắc chữ, hoa văn lên thủy tinh", "Làm sạch gỉ sắt", "Điều chế khí Flo"],
+        correct: 1,
+        explanation: "Do HF ăn mòn được thủy tinh (thành phần chính là SiO₂)."
+    },
+    {
+        type: "mc",
+        question: "Hợp chất nào sau đây của Clo có số oxi hóa +7?",
+        options: ["HClO", "HClO₂", "HClO₃", "HClO₄"],
+        correct: 3,
+        explanation: "Trong HClO₄: 1 + x + 4(-2) = 0 => x = +7."
+    },
+    {
+        type: "sa",
+        question: "Khí nào có màu tím đen, khi đun nóng chuyển thành hơi màu tím? (Viết công thức)",
+        correct: ["i2"],
+        explanation: "Iodine (Iot) rắn thăng hoa tạo hơi màu tím."
+    },
+    {
+        type: "mc",
+        question: "Trong phản ứng: 3Br₂ + 3Na₂CO₃ → 5NaBr + NaBrO₃ + 3CO₂, Brom đóng vai trò:",
+        options: ["Chất oxi hóa", "Chất khử", "Vừa là chất oxi hóa, vừa là chất khử", "Môi trường"],
+        correct: 2,
+        explanation: "Br₂ (0) chuyển thành Br⁻ (-1) và Br⁵⁺ (+5). Đây là phản ứng tự oxi hóa - khử."
+    },
+    {
+        type: "tf",
+        question: "Muối ăn (NaCl) tinh khiết rất dễ bị chảy nước trong không khí ẩm.",
+        correct: false,
+        explanation: "Sai. NaCl tinh khiết không bị chảy nước. Muối ăn bị chảy nước là do lẫn tạp chất MgCl₂, CaCl₂."
+    },
+    {
+        type: "mc",
+        question: "Để điều chế khí HCl trong phòng thí nghiệm, người ta dùng phản ứng:",
+        options: ["H₂ + Cl₂ (ánh sáng)", "NaCl (rắn) + H₂SO₄ (đậm đặc)", "BaCl₂ + H₂SO₄ (loãng)", "AgCl + HNO₃"],
+        correct: 1,
+        explanation: "Phương pháp sunfat: NaCl(r) + H₂SO₄(đ) → NaHSO₄ + HCl(k)."
+    },
+
+    // CHƯƠNG 6: TỐC ĐỘ PHẢN ỨNG (Bài tập thực tế)
+    {
+        type: "mc",
+        question: "Tại sao nhôm dây (Al) cháy trong bình khí Clo nhanh hơn trong không khí?",
+        options: ["Vì nồng độ Clo trong bình cao hơn nồng độ Oxi trong không khí", "Vì Clo có tính oxi hóa mạnh hơn Oxi", "Vì nhiệt độ trong bình cao hơn", "Vì Al thích Clo hơn"],
+        correct: 0,
+        explanation: "Trong bình khí Clo nguyên chất, nồng độ chất phản ứng cao hơn nhiều so với Oxi trong không khí (chỉ chiếm 21%)."
+    },
+    {
+        type: "sa",
+        question: "Khi nhiệt độ cơ thể tăng (sốt), tốc độ các phản ứng sinh hóa trong cơ thể sẽ ... (tăng/giảm)?",
+        correct: ["tăng", "tăng lên"],
+        explanation: "Nhiệt độ tăng làm tăng tốc độ phản ứng, dẫn đến nhịp tim, hô hấp tăng."
+    },
+    {
+        type: "mc",
+        question: "Cho phản ứng A + 2B → C. Biểu thức tốc độ là v = k.[A].[B]. Phản ứng này là phản ứng bậc mấy?",
+        options: ["1", "2", "3", "0"],
+        correct: 1,
+        explanation: "Bậc phản ứng = tổng số mũ nồng độ = 1 + 1 = 2."
+    },
+    {
+        type: "mc",
+        question: "Chất xúc tác trong bộ chuyển đổi khí thải ô tô (xúc tác ba chiều) thường chứa kim loại quý nào?",
+        options: ["Sắt (Fe)", "Kẽm (Zn)", "Bạch kim (Pt)", "Nhôm (Al)"],
+        correct: 2,
+        explanation: "Pt, Pd, Rh là các chất xúc tác giúp chuyển hóa khí độc (CO, NOx) thành khí vô hại."
+    },
+    {
+        type: "tf",
+        question: "Tốc độ phản ứng hóa học giảm dần theo thời gian.",
+        correct: true,
+        explanation: "Đúng. Vì nồng độ chất tham gia giảm dần theo thời gian nên tốc độ phản ứng cũng giảm dần."
+    },
+
+    // CHƯƠNG 5: NĂNG LƯỢNG HÓA HỌC (Tổng kết)
+    {
+        type: "mc",
+        question: "Phản ứng nào sau đây có biến thiên entropy (ΔS) dương (độ hỗn loạn tăng)?",
+        options: ["H₂O(l) → H₂O(s)", "N₂(g) + 3H₂(g) → 2NH₃(g)", "CaCO₃(s) → CaO(s) + CO₂(g)", "Ag⁺(aq) + Cl⁻(aq) → AgCl(s)"],
+        correct: 2,
+        explanation: "Từ 1 chất rắn tạo ra chất rắn và chất khí (làm tăng thể tích, tăng độ hỗn loạn) => ΔS > 0."
+    },
+    {
+        type: "mc",
+        question: "Nhiệt phân 1 mol Cu(OH)₂ cần cung cấp 45 kJ. Phương trình nhiệt hóa học là:",
+        options: ["Cu(OH)₂ → CuO + H₂O ΔrH = -45 kJ", "Cu(OH)₂ → CuO + H₂O ΔrH = +45 kJ", "CuO + H₂O → Cu(OH)₂ ΔrH = +45 kJ", "Cu(OH)₂ → CuO + H₂O ΔrH = 0"],
+        correct: 1,
+        explanation: "Cung cấp nhiệt => Thu nhiệt => ΔH dương."
+    },
+    {
+        type: "sa",
+        question: "Quá trình hòa tan axit sunfuric đặc vào nước là quá trình ... nhiệt. (Tỏa/Thu)",
+        correct: ["tỏa", "tỏa nhiệt"],
+        explanation: "Hòa tan H₂SO₄ đặc tỏa rất nhiều nhiệt, làm nước có thể sôi ngay lập tức."
+    },
+    {
+        type: "mc",
+        question: "Trong các nhiên liệu sau, loại nào có năng suất tỏa nhiệt (kJ/kg) cao nhất?",
+        options: ["Than đá", "Xăng", "Khí Hydro", "Gỗ"],
+        correct: 2,
+        explanation: "Hydro có mật độ năng lượng trên khối lượng rất cao (gấp khoảng 3 lần xăng)."
+    },
+    {
+        type: "tf",
+        question: "Nhiệt tạo thành của hợp chất càng âm thì hợp chất đó càng kém bền.",
+        correct: false,
+        explanation: "Sai. ΔfH càng âm nghĩa là khi tạo thành đã giải phóng nhiều năng lượng, hợp chất ở mức năng lượng thấp => Càng bền."
+    },
+
+    // CHƯƠNG 4: OXI HÓA - KHỬ (Tổng kết)
+    {
+        type: "mc",
+        question: "Trong phản ứng: KClO₃ + 6HCl → KCl + 3Cl₂ + 3H₂O. Tỉ lệ số phân tử HCl bị oxi hóa so với số phân tử HCl tham gia phản ứng là:",
+        options: ["5/6", "1/6", "5/1", "1/5"],
+        correct: 0,
+        explanation: "Trong 6 HCl tham gia, có 5 Cl⁻ bị oxi hóa (tạo 3Cl₂ cùng với 1 Cl từ KClO₃), 1 Cl⁻ tạo KCl giữ nguyên số oxi hóa."
+    },
+    {
+        type: "mc",
+        question: "Số oxi hóa của Fe trong quặng Pirit sắt (FeS₂) là:",
+        options: ["+2", "+3", "+8/3", "+4"],
+        correct: 0,
+        explanation: "Coi S₂ có số oxi hóa -2 (giống O₂²⁻), thì Fe là +2."
+    },
+    {
+        type: "sa",
+        question: "Chất nào được dùng để tẩy uế chuồng trại, cống rãnh? (Gợi ý: Ca(OCl)2)",
+        correct: ["clorua vôi", "calci hypoclorit", "clorua voi"],
+        explanation: "Clorua vôi (CaOCl₂) rẻ tiền, có tính oxi hóa mạnh diệt khuẩn."
+    },
+    {
+        type: "mc",
+        question: "Cho phản ứng: Cu + H₂SO₄ (đặc, nóng) → CuSO₄ + X + H₂O. X là khí gì?",
+        options: ["H₂", "SO₂", "H₂S", "SO₃"],
+        correct: 1,
+        explanation: "Kim loại + H₂SO₄ đặc nóng thường sinh ra khí SO₂."
+    },
+    {
+        type: "tf",
+        question: "Số oxi hóa của một nguyên tố trong hợp chất luôn là số nguyên.",
+        correct: false,
+        explanation: "Sai. Số oxi hóa có thể là phân số (Ví dụ: Fe trong Fe₃O₄ là +8/3, O trong KO₂ là -1/2)."
+    },
+
+    // CÂU HỎI TỔNG HỢP CUỐI KỲ
+    {
+        type: "mc",
+        question: "Chất nào sau đây làm quỳ tím ẩm hóa đỏ sau đó mất màu?",
+        options: ["Khí HCl", "Khí Cl₂", "Khí O₂", "Khí N₂"],
+        correct: 1,
+        explanation: "Cl₂ + H₂O ⇌ HCl + HClO. HCl làm đỏ quỳ, HClO oxi hóa làm mất màu ngay sau đó."
+    },
+    {
+        type: "mc",
+        question: "Liên kết trong phân tử O₂ là:",
+        options: ["Liên kết đơn", "Liên kết đôi", "Liên kết ba", "Liên kết ion"],
+        correct: 1,
+        explanation: "O=O. Hai nguyên tử O liên kết bằng liên kết đôi."
+    },
+    {
+        type: "sa",
+        question: "Trong bảng tuần hoàn, các nguyên tố khí hiếm thuộc nhóm nào? (Ví dụ: IA, VIIIA)",
+        correct: ["viiia", "8a"],
+        explanation: "Khí hiếm thuộc nhóm VIIIA."
+    },
+    {
+        type: "mc",
+        question: "Phản ứng nào sau đây được dùng để khắc phục sự cố tràn thủy ngân?",
+        options: ["Rắc bột sắt", "Rắc bột lưu huỳnh (S)", "Đổ nước", "Đổ cát"],
+        correct: 1,
+        explanation: "Hg + S → HgS (xảy ra ở nhiệt độ thường). HgS là chất rắn, không bay hơi, dễ thu gom."
+    },
+    {
+        type: "mc",
+        question: "Dãy chất nào sau đây đều tác dụng được với dung dịch HCl?",
+        options: ["Fe, CuO, Ba(OH)₂", "Cu, Fe, NaOH", "Ag, ZnO, KOH", "Mg, Au, CaCO₃"],
+        correct: 0,
+        explanation: "Cu, Ag, Au đứng sau H nên không tác dụng với HCl."
+    },
+    {
+        type: "mc",
+        question: "Chất nào sau đây là chất điện li mạnh?",
+        options: ["C₂H₅OH", "NaCl", "CH₃COOH", "C₆H₁₂O₆ (Glucose)"],
+        correct: 1,
+        explanation: "Muối tan NaCl phân ly hoàn toàn trong nước."
+    },
+    {
+        type: "tf",
+        question: "Phản ứng oxi hóa - khử là phản ứng quan trọng nhất trong việc cung cấp năng lượng cho sự sống.",
+        correct: true,
+        explanation: "Đúng. Hô hấp, quang hợp, đốt cháy nhiên liệu đều là phản ứng oxi hóa - khử."
+    },
+    {
+        type: "mc",
+        question: "Khí nào sau đây nhẹ nhất?",
+        options: ["H₂", "He", "CH₄", "N₂"],
+        correct: 0,
+        explanation: "H₂ (M=2), He (M=4), CH₄ (M=16), N₂ (M=28)."
+    },
+    {
+        type: "mc",
+        question: "Đơn vị của áp suất trong hệ SI là:",
+        options: ["atm", "mmHg", "Pascal (Pa)", "Bar"],
+        correct: 2,
+        explanation: "Pascal (Pa) là đơn vị chuẩn SI."
+    },
+    {
+        type: "sa",
+        question: "Axit nào được gọi là 'máu của công nghiệp hóa chất'?",
+        correct: ["h2so4", "axit sunfuric", "sulfuric acid"],
+        explanation: "H₂SO₄ có ứng dụng cực kỳ rộng rãi trong mọi ngành công nghiệp."
+    },
+    {
+        type: "mc",
+        question: "Trong phản ứng: 2NO₂ (nâu đỏ) ⇌ N₂O₄ (không màu) ΔrH < 0. Khi ngâm bình phản ứng vào nước đá (giảm nhiệt độ), màu sắc thay đổi thế nào?",
+        options: ["Đậm lên", "Nhạt đi", "Không đổi", "Chuyển sang xanh"],
+        correct: 1,
+        explanation: "Phản ứng thuận tỏa nhiệt (ΔrH < 0). Giảm nhiệt độ cân bằng chuyển dịch theo chiều thuận (tỏa nhiệt) tạo ra N₂O₄ không màu => Màu nhạt đi."
+    },
+    {
+        type: "mc",
+        question: "Yếu tố nào sau đây không phải là điều kiện để phản ứng xảy ra?",
+        options: ["Các chất phải tiếp xúc với nhau", "Các hạt phải va chạm với nhau", "Va chạm phải có đủ năng lượng", "Phải có chất xúc tác"],
+        correct: 3,
+        explanation: "Nhiều phản ứng tự xảy ra mà không cần xúc tác. Xúc tác chỉ làm tăng tốc độ."
+    },
+    {
+        type: "mc",
+        question: "Số oxi hóa của Nitơ trong N₂O là:",
+        options: ["+1", "+2", "+3", "+4"],
+        correct: 0,
+        explanation: "2x + (-2) = 0 => 2x = 2 => x = +1."
+    },
+    {
+        type: "tf",
+        question: "Nước đá khô là nước đóng băng ở nhiệt độ rất thấp.",
+        correct: false,
+        explanation: "Sai. Nước đá khô là CO₂ rắn."
+    },
+    {
+        type: "mc",
+        question: "Câu hỏi cuối cùng: Chúc mừng bạn đã hoàn thành 300 câu hỏi! Nguyên tố hóa học nào có kí hiệu là 'X'?",
+        options: ["Xenon", "Không có nguyên tố nào", "Xeri", "Kẽm"],
+        correct: 1,
+        explanation: "Hiện tại không có nguyên tố nào có kí hiệu hóa học chỉ là chữ cái 'X'."
+    }
+];
+
+    // ================= LOGIC GAME =================
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let isPlaying = false;
+    const bgMusic = document.getElementById('bg-music');
+    const musicIcon = document.querySelector('.music-btn');
+
+    // Tạo hiệu ứng tuyết rơi
+    function createSnowflakes() {
+        const snowContainer = document.getElementById('snow-container');
+        const numberOfSnowflakes = 30; // Giảm số lượng để đỡ lag
+        
+        for (let i = 0; i < numberOfSnowflakes; i++) {
+            const snowflake = document.createElement('div');
+            snowflake.className = 'snowflake';
+            snowflake.innerHTML = '❄';
+            snowflake.style.left = Math.random() * 100 + '%';
+            snowflake.style.animationDuration = (Math.random() * 5 + 5) + 's';
+            snowflake.style.opacity = Math.random();
+            snowflake.style.fontSize = (Math.random() * 15 + 10) + 'px';
+            snowContainer.appendChild(snowflake);
+        }
+    }
+    createSnowflakes();
+
+    function toggleMusic() {
+        if (isPlaying) {
+            bgMusic.pause();
+            musicIcon.innerText = '🔇';
+        } else {
+            bgMusic.play().catch(e => console.log("Cần tương tác để phát nhạc"));
+            musicIcon.innerText = '🎵';
+        }
+        isPlaying = !isPlaying;
+    }
+
+    function startGame() {
+        // Trộn câu hỏi
+        shuffleArray(questions);
+        score = 0;
+        currentQuestionIndex = 0;
+        
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('play-screen').classList.add('active');
+        
+        // Tự động bật nhạc
+        if (!isPlaying) toggleMusic();
+        
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        const qData = questions[currentQuestionIndex];
+        
+        // Cập nhật thông tin
+        document.getElementById('progress').innerText = `Câu: ${currentQuestionIndex + 1}/${questions.length}`;
+        document.getElementById('score').innerText = `Điểm: ${score}`;
+        document.getElementById('q-text').innerText = qData.question;
+        
+        // Reset giao diện
+        const optionsContainer = document.getElementById('options-container');
+        optionsContainer.innerHTML = '';
+        document.getElementById('input-container').style.display = 'none';
+        document.getElementById('explanation').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+        document.getElementById('user-input').value = '';
+
+        // Hiển thị theo loại câu hỏi
+        if (qData.type === 'mc') {
+            document.getElementById('q-type').innerText = "Trắc nghiệm";
+            optionsContainer.className = 'options-grid';
+            qData.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-option';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswerMC(index, btn);
+                optionsContainer.appendChild(btn);
+            });
+        } 
+        else if (qData.type === 'tf') {
+            document.getElementById('q-type').innerText = "Đúng / Sai";
+            optionsContainer.className = 'options-grid';
+            
+            const btnTrue = document.createElement('button');
+            btnTrue.className = 'btn-option';
+            btnTrue.innerText = "Đúng";
+            btnTrue.onclick = () => checkAnswerTF(true, btnTrue);
+            
+            const btnFalse = document.createElement('button');
+            btnFalse.className = 'btn-option';
+            btnFalse.innerText = "Sai";
+            btnFalse.onclick = () => checkAnswerTF(false, btnFalse);
+
+            optionsContainer.appendChild(btnTrue);
+            optionsContainer.appendChild(btnFalse);
+        }
+        else if (qData.type === 'sa') {
+            document.getElementById('q-type').innerText = "Điền từ ngắn";
+            optionsContainer.className = ''; // Xóa grid layout
+            document.getElementById('input-container').style.display = 'block';
+        }
+    }
+
+    function checkAnswerMC(selectedIndex, btnElement) {
+        const qData = questions[currentQuestionIndex];
+        const allBtns = document.querySelectorAll('.btn-option');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        if (selectedIndex === qData.correct) {
+            btnElement.classList.add('correct');
+            score += 10;
+        } else {
+            btnElement.classList.add('wrong');
+            allBtns[qData.correct].classList.add('correct'); // Hiện đáp án đúng
+        }
+        showExplanation(qData.explanation);
+    }
+
+    function checkAnswerTF(userChoice, btnElement) {
+        const qData = questions[currentQuestionIndex];
+        const allBtns = document.querySelectorAll('.btn-option');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        if (userChoice === qData.correct) {
+            btnElement.classList.add('correct');
+            score += 10;
+        } else {
+            btnElement.classList.add('wrong');
+            // Tìm nút đúng để highlight
+            allBtns.forEach(btn => {
+                if((btn.innerText === "Đúng" && qData.correct) || (btn.innerText === "Sai" && !qData.correct)) {
+                    btn.classList.add('correct');
+                }
+            });
+        }
+        showExplanation(qData.explanation);
+    }
+
+    function checkShortAnswer() {
+        const qData = questions[currentQuestionIndex];
+        const userInput = document.getElementById('user-input').value.trim().toLowerCase();
+        const btn = document.querySelector('#input-container button');
+        const inputField = document.getElementById('user-input');
+        
+        if(userInput === "") return; // Không làm gì nếu trống
+
+        btn.disabled = true;
+        inputField.disabled = true;
+
+        if (qData.correct.includes(userInput)) {
+            score += 10;
+            inputField.style.borderColor = "var(--green)";
+            inputField.style.backgroundColor = "#d4edda";
+            showExplanation("Chính xác! " + qData.explanation);
+        } else {
+            inputField.style.borderColor = "var(--red)";
+            inputField.style.backgroundColor = "#f8d7da";
+            showExplanation(`Sai rồi. Đáp án là: ${qData.correct[0]}. ${qData.explanation}`);
+        }
+    }
+
+    function showExplanation(text) {
+        const expBox = document.getElementById('explanation');
+        document.getElementById('exp-text').innerText = text;
+        expBox.style.display = 'block';
+        
+        // Cập nhật điểm ngay lập tức
+        document.getElementById('score').innerText = `Điểm: ${score}`;
+        
+        // Hiện nút tiếp theo
+        document.getElementById('next-btn').style.display = 'inline-block';
+    }
+
+    function nextQuestion() {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < questions.length) {
+            loadQuestion();
+        } else {
+            endGame();
+        }
+    }
+
+    function endGame() {
+        document.getElementById('play-screen').classList.remove('active');
+        document.getElementById('end-screen').classList.add('active');
+        document.getElementById('final-score').innerText = `${score} / ${questions.length * 10}`;
+    }
+
+    // Hàm trộn mảng
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+</script>
+</body>
+</html>
